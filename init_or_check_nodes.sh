@@ -10,7 +10,20 @@ echo '📦 코어 파이썬 패키지 설치'
 
 pip install torchsde || echo '⚠️ torchsde 설치 실패'
 pip install av || echo '⚠️ av 설치 실패'
-pip install torchaudio || echo '⚠️ torchaudio 설치 실패'
+
+################################################################################
+# 🔥🔥🔥 [중요 수정] torchaudio 단독 설치는 ABI 깨짐의 원인
+# 🔥🔥🔥 반드시 torch / torchvision / torchaudio를 "같이" 설치해야 함
+# 🔥🔥🔥 Docker 용량 이슈 때문에 init에서 설치하되, cu121로 고정
+################################################################################
+pip uninstall -y torch torchvision torchaudio || true
+pip install \
+  torch torchvision torchaudio \
+  --index-url https://download.pytorch.org/whl/cu121 \
+  || echo '⚠️ torch / torchvision / torchaudio 세트 설치 실패'
+################################################################################
+# 🔥🔥🔥 [중요 수정 끝]
+################################################################################
 
 ############################################
 # 📦 일반 파이썬 패키지 (Dockerfile에서 이동)
@@ -62,10 +75,7 @@ git clone https://github.com/kijai/ComfyUI-WanVideoWrapper.git && (cd ComfyUI-Wa
 git clone https://github.com/kijai/ComfyUI-WanAnimatePreprocess.git && (cd ComfyUI-WanAnimatePreprocess && git checkout 1a35b81) || echo '⚠️ ComfyUI-WanAnimatePreprocess 설치 실패(15)'
 git clone https://github.com/kijai/ComfyUI-SCAIL-Pose.git && (cd ComfyUI-SCAIL-Pose && git checkout 11402b1) || echo '⚠️ ComfyUI-SCAIL-Pose 설치 실패(16)'
 
-
 )
-
-
 
 ############################################
 # ⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇
