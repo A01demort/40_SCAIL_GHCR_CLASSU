@@ -4,34 +4,13 @@
 echo "🌀 RunPod 재시작 시 의존성 복구 시작"
 
 ############################################
-# 🔒 torch / torchaudio 세트 보호 설치 (추가)
-############################################
-
-TORCH_LOCK=/workspace/.torch_installed
-
-if [ ! -f "$TORCH_LOCK" ]; then
-  echo "🔥 torch / torchaudio 최초 1회 설치"
-
-  pip uninstall -y torch torchaudio torchvision || true
-
-  pip install \
-    torch==2.1.0+cu121 \
-    torchvision==0.16.0+cu121 \
-    torchaudio==2.1.0+cu121 \
-    --index-url https://download.pytorch.org/whl/cu121
-
-  touch "$TORCH_LOCK"
-else
-  echo "⏩ torch 세트 이미 설치됨, 건너뜀"
-fi
-
-############################################
 # 📦 코어 파이썬 패키지 (ComfyUI 필수)
 ############################################
 echo '📦 코어 파이썬 패키지 설치'
 
 pip install torchsde || echo '⚠️ torchsde 설치 실패'
 pip install av || echo '⚠️ av 설치 실패'
+pip install torchaudio || echo '⚠️ torchaudio 설치 실패'
 
 ############################################
 # 📦 일반 파이썬 패키지 (Dockerfile에서 이동)
@@ -73,8 +52,8 @@ git clone https://github.com/city96/ComfyUI-GGUF.git && (cd ComfyUI-GGUF && git 
 git clone https://github.com/Gourieff/ComfyUI-ReActor.git && (cd ComfyUI-ReActor && git checkout d60458f212e8c7a496269bbd29ca7c6a3198239a) || echo '⚠️ ReActor 실패'
 git clone https://github.com/yolain/ComfyUI-Easy-Use.git && (cd ComfyUI-Easy-Use && git checkout 23d9c36) || echo '⚠️ EasyUse 실패(9)'
 git clone https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite.git && (cd ComfyUI-VideoHelperSuite && git checkout 3234937) || echo '⚠️ VideoHelper 실패(10)'
-# git clone https://github.com/kijai/ComfyUI-FramePackWrapper.git && (cd ComfyUI-FramePackWrapper && git checkout a7c4b70) || echo '⚠️ FramePackWrapper 실패(11)'
-# git clone https://github.com/pollockjj/ComfyUI-MultiGPU.git && (cd ComfyUI-MultiGPU && git checkout 6e4181a7bb5e2ef147aa8e1d0845098a709306a4) || echo '⚠️ MultiGPU 실패'
+git clone https://github.com/kijai/ComfyUI-FramePackWrapper.git && (cd ComfyUI-FramePackWrapper && git checkout a7c4b70) || echo '⚠️ FramePackWrapper 실패(11)'
+git clone https://github.com/pollockjj/ComfyUI-MultiGPU.git && (cd ComfyUI-MultiGPU && git checkout 6e4181a7bb5e2ef147aa8e1d0845098a709306a4) || echo '⚠️ MultiGPU 실패'
 git clone https://github.com/Fannovel16/comfyui_controlnet_aux.git && (cd comfyui_controlnet_aux && git checkout 59b027e088c1c8facf7258f6e392d16d204b4d27) || echo '⚠️ controlnet_aux 실패'
 git clone https://github.com/chflame163/ComfyUI_LayerStyle.git && (cd ComfyUI_LayerStyle && git checkout 5840264) || echo '⚠️ ComfyUI_LayerStyle 설치 실패(12)'
 git clone https://github.com/Fannovel16/ComfyUI-Frame-Interpolation.git && (cd ComfyUI-Frame-Interpolation && git checkout a969c01dbccd9e5510641be04eb51fe93f6bfc3d) || echo '⚠️ Frame-Interpolation 실패'
@@ -83,7 +62,10 @@ git clone https://github.com/kijai/ComfyUI-WanVideoWrapper.git && (cd ComfyUI-Wa
 git clone https://github.com/kijai/ComfyUI-WanAnimatePreprocess.git && (cd ComfyUI-WanAnimatePreprocess && git checkout 1a35b81) || echo '⚠️ ComfyUI-WanAnimatePreprocess 설치 실패(15)'
 git clone https://github.com/kijai/ComfyUI-SCAIL-Pose.git && (cd ComfyUI-SCAIL-Pose && git checkout 11402b1) || echo '⚠️ ComfyUI-SCAIL-Pose 설치 실패(16)'
 
+
 )
+
+
 
 ############################################
 # ⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇
@@ -106,7 +88,7 @@ for d in */; do
     fi
 
     echo "📦 $d 의존성 설치 중..."
-    if pip install -r "$req_file" --no-deps; then
+    if pip install -r "$req_file"; then
       touch "$marker_file"
     else
       echo "⚠️ $d 의존성 설치 실패 (무시하고 진행)"
