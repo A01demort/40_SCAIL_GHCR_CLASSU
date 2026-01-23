@@ -10,9 +10,12 @@ echo "🌀 RunPod 재시작 시 의존성 복구 시작"
 if [ ! -f "/tmp/.a1_sys_pkg_checked" ]; then
     echo '📦 코어 파이썬 패키지 설치'
 
-    pip install torchsde || echo '⚠️ torchsde 설치 실패'
-    pip install av || echo '⚠️ av 설치 실패'
-    pip install torchaudio || echo '⚠️ torchaudio 설치 실패'
+    # 🔥 [CRITICAL] Torch 버전 고정 (OSError: undefined symbol 해결 핵심)
+    # ComfyUI + CUDA 12.1 환경에 맞는 안정적 버전 강제 재설치
+    pip install torch==2.1.2 torchvision==0.16.2 torchaudio==2.1.2 --index-url https://download.pytorch.org/whl/cu121 || echo '⚠️ Torch 재설치 실패'
+
+    # 필수 의존성 및 누락 패키지(pydantic-settings) 추가
+    pip install torchsde av pydantic-settings || echo '⚠️ 초기 의존성 설치 실패'
 
     echo '📦 파이썬 패키지 설치'
 
@@ -20,7 +23,7 @@ if [ ! -f "/tmp/.a1_sys_pkg_checked" ]; then
         GitPython onnx onnxruntime opencv-python-headless tqdm requests \
         scikit-image piexif packaging transformers accelerate peft sentencepiece \
         protobuf scipy einops pandas matplotlib imageio[ffmpeg] pyzbar pillow numba \
-        gguf diffusers insightface dill || echo '⚠️ 일부 pip 설치 실패'
+        gguf diffusers insightface dill taichi pyloudnorm || echo '⚠️ 일부 pip 설치 실패'
 
     pip install facelib==0.2.2 mtcnn==0.1.1 || echo '⚠️ facelib 실패'
     pip install facexlib basicsr gfpgan realesrgan || echo '⚠️ facexlib 실패'
@@ -124,4 +127,4 @@ echo "5. 카카오톡 오픈채팅방 : https://open.kakao.com/o/gxvpv2Mf"
 echo "6. CIVITAI : https://civitai.com/user/a01demort"
 echo -e "\n==================================="
 
-/workspace/A1/startup_banner.sh
+# /workspace/A1/startup_banner.sh -> Dockerfile에서 병렬 실행으로 변경됨
