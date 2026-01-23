@@ -31,9 +31,11 @@ if [ ! -f "/tmp/.a1_sys_pkg_checked" ]; then
     pip install ultralytics || echo '⚠️ ultralytics 실패'
     pip install ftfy || echo '⚠️ ftfy 실패'
     pip install bitsandbytes xformers || echo '⚠️ bitsandbytes 또는 xformers 설치 실패'
+    pip install bitsandbytes xformers || echo '⚠️ bitsandbytes 또는 xformers 설치 실패'
     pip install sageattention || echo '⚠️ sageattention 설치 실패'
     
-    # 마커 생성 (컨테이너 재시작 전까지 유지됨)
+    # [중요] 모든 필수 패키지 설치 시도가 끝났을 때만 마커 생성
+    # (실패 시 마커 안 생김 -> 수동 재실행 시 다시 시도 가능)
     touch "/tmp/.a1_sys_pkg_checked"
 else
     echo "⏩ 시스템 패키지 설치 확인됨 (스킵)"
@@ -106,11 +108,18 @@ done
 
 # 🔁 WanVideoWrapper 스마트 의존성 복구 (휘발성 마커 사용)
 # 컨테이너 재시작 시에는 마커가 없으므로 설치 진행, 이후엔 스킵
+# 🔁 WanVideoWrapper 스마트 의존성 복구 (휘발성 마커 사용)
+# 컨테이너 재시작 시에는 마커가 없으므로 설치 진행, 이후엔 스킵
 if [ -d "ComfyUI-WanVideoWrapper" ] && [ ! -f "/tmp/.wan_wrapper_checked" ]; then
   echo "🔁 WanVideoWrapper 의존성 확인 및 복구..."
   cd ComfyUI-WanVideoWrapper
-  # 요구사항 설치 (이미 만족하면 빠름)
-  pip install -r requirements.txt 2>/dev/null && touch "/tmp/.wan_wrapper_checked"
+  # 성공 시에만 마커 생성 (실패 시 재시도 기회 제공)
+  if pip install -r requirements.txt 2>/dev/null; then
+      echo "✅ WanVideoWrapper 의존성 설치 완료"
+      touch "/tmp/.wan_wrapper_checked"
+  else
+      echo "⚠️ WanVideoWrapper 의존성 설치 실패 (재시도 필요)"
+  fi
   cd ..
 else
   echo "⏩ WanVideoWrapper 의존성 확인됨 (스킵)"
