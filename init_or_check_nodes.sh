@@ -72,7 +72,7 @@ git clone https://github.com/Fannovel16/comfyui_controlnet_aux.git && (cd comfyu
 git clone https://github.com/chflame163/ComfyUI_LayerStyle.git && (cd ComfyUI_LayerStyle && git checkout 5840264) || echo '⚠️ ComfyUI_LayerStyle 설치 실패(12)'
 git clone https://github.com/Fannovel16/ComfyUI-Frame-Interpolation.git && (cd ComfyUI-Frame-Interpolation && git checkout a969c01dbccd9e5510641be04eb51fe93f6bfc3d) || echo '⚠️ Frame-Interpolation 실패'
 git clone https://github.com/ltdrdata/ComfyUI-Impact-Pack.git && (cd ComfyUI-Impact-Pack && git checkout 51b7dcd) || echo '⚠️ Impact-Pack 실패(13)'
-git clone https://github.com/kijai/ComfyUI-WanVideoWrapper.git && (cd ComfyUI-WanVideoWrapper && git checkout bf1d77f) || echo '⚠️ ComfyUI-WanVideoWrapper 설치 실패(14)'
+git clone https://github.com/kijai/ComfyUI-WanVideoWrapper.git && (cd ComfyUI-WanVideoWrapper && git checkout 2ee9e2f) || echo '⚠️ ComfyUI-WanVideoWrapper 설치 실패(14)'
 git clone https://github.com/kijai/ComfyUI-WanAnimatePreprocess.git && (cd ComfyUI-WanAnimatePreprocess && git checkout 1a35b81) || echo '⚠️ ComfyUI-WanAnimatePreprocess 설치 실패(15)'
 git clone https://github.com/kijai/ComfyUI-SCAIL-Pose.git && (cd ComfyUI-SCAIL-Pose && git checkout 11402b1) || echo '⚠️ ComfyUI-SCAIL-Pose 설치 실패(16)'
 
