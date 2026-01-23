@@ -10,15 +10,22 @@ echo "🌀 RunPod 재시작 시 의존성 복구 시작"
 if [ ! -f "/tmp/.a1_sys_pkg_checked" ]; then
     echo '📦 코어 파이썬 패키지 설치'
 
-    # 🔥 [CRITICAL] Torch 버전 완전 재설치 (버전 불일치 방지)
-    # 기존 버전 제거 (찌꺼기 방지)
-    pip uninstall -y torch torchvision torchaudio
+    # 🔥 [CRITICAL] Numpy 2.0 충돌 방지 (매우 중요)
+    # 최신 패키지들이 numpy 2.x를 깔면서 torch 호환성을 깨뜨리는 문제 원천 봉쇄
+    pip install "numpy<2" --force-reinstall
 
-    # 최신 노드(WanVideo) 호환을 위해 Torch 2.4.1 + CUDA 12.1 조합으로 업그레이드
-    # (이전 2.1.2는 너무 구버전이라 다른 패키지가 Torch만 몰래 업그레이드해서 깨짐)
-    pip install torch==2.4.1 torchvision==0.19.1 torchaudio==2.4.1 --index-url https://download.pytorch.org/whl/cu121 || echo '⚠️ Torch 재설치 실패'
+    # 🔥 [CRITICAL] Torch 버전 완전 재설치 (Golden Set: 2.3.1)
+    # 최신(2.4.x)보다는 가장 안정적인 2.3.1 + CUDA 12.1 조합이 호환성 최고임
+    # 2번 실행하여 진짜 찌꺼기까지 제거
+    pip uninstall -y torch torchvision torchaudio xformers
+    pip uninstall -y torch torchvision torchaudio xformers
+
+    # [Golden Set] Torch 2.3.1 + Vision 0.18.1 + Audio 2.3.1 + Xformers 0.0.27
+    # 이 조합은 ComfyUI + WanVideoWrapper에서 가장 에러 없는 조합으로 검증됨
+    pip install torch==2.3.1 torchvision==0.18.1 torchaudio==2.3.1 xformers==0.0.27 --index-url https://download.pytorch.org/whl/cu121 || echo '⚠️ Torch 재설치 실패'
 
     # 필수 의존성 및 누락 패키지(pydantic-settings) 추가
+    # diffusers가 torch를 멋대로 올리지 않게 버전 고정 필요할 수 있으나, 일단 최신 유지
     pip install torchsde av pydantic-settings || echo '⚠️ 초기 의존성 설치 실패'
 
     echo '📦 파이썬 패키지 설치'
