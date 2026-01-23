@@ -101,10 +101,12 @@ EXPOSE 8888
 
 CMD bash -c "\
 echo '🌀 A1(AI는 에이원) : https://www.youtube.com/@A01demort' && \
-jupyter lab --ip=0.0.0.0 --port=8888 --allow-root \
+/workspace/A1/init_or_check_nodes.sh && \
+echo '✅ 의존성 확인 완료 - 서비스 시작' && \
+(jupyter lab --ip=0.0.0.0 --port=8888 --allow-root \
 --ServerApp.root_dir=/workspace \
 --ServerApp.token='' --ServerApp.password='' & \
 python -u /workspace/ComfyUI/main.py --listen 0.0.0.0 --port=8188 \
 --front-end-version Comfy-Org/ComfyUI_frontend@1.37.2 & \
-/workspace/A1/init_or_check_nodes.sh && \
-wait"
+/workspace/A1/startup_banner.sh & \
+wait)"
