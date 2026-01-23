@@ -6,30 +6,35 @@ echo "🌀 RunPod 재시작 시 의존성 복구 시작"
 ############################################
 # 📦 코어 파이썬 패키지 (ComfyUI 필수)
 ############################################
-echo '📦 코어 파이썬 패키지 설치'
+# 💨 빠른 실행을 위한 시스템 패키지 설치 확인 (휘발성 마커 사용)
+if [ ! -f "/tmp/.a1_sys_pkg_checked" ]; then
+    echo '📦 코어 파이썬 패키지 설치'
 
-pip install torchsde || echo '⚠️ torchsde 설치 실패'
-pip install av || echo '⚠️ av 설치 실패'
-pip install torchaudio || echo '⚠️ torchaudio 설치 실패'
+    pip install torchsde || echo '⚠️ torchsde 설치 실패'
+    pip install av || echo '⚠️ av 설치 실패'
+    pip install torchaudio || echo '⚠️ torchaudio 설치 실패'
 
-############################################
-# 📦 일반 파이썬 패키지 (Dockerfile에서 이동)
-############################################
-echo '📦 파이썬 패키지 설치'
+    echo '📦 파이썬 패키지 설치'
 
-pip install --no-cache-dir \
-    GitPython onnx onnxruntime opencv-python-headless tqdm requests \
-    scikit-image piexif packaging transformers accelerate peft sentencepiece \
-    protobuf scipy einops pandas matplotlib imageio[ffmpeg] pyzbar pillow numba \
-    gguf diffusers insightface dill || echo '⚠️ 일부 pip 설치 실패'
+    pip install --no-cache-dir \
+        GitPython onnx onnxruntime opencv-python-headless tqdm requests \
+        scikit-image piexif packaging transformers accelerate peft sentencepiece \
+        protobuf scipy einops pandas matplotlib imageio[ffmpeg] pyzbar pillow numba \
+        gguf diffusers insightface dill || echo '⚠️ 일부 pip 설치 실패'
 
-pip install facelib==0.2.2 mtcnn==0.1.1 || echo '⚠️ facelib 실패'
-pip install facexlib basicsr gfpgan realesrgan || echo '⚠️ facexlib 실패'
-pip install timm || echo '⚠️ timm 실패'
-pip install ultralytics || echo '⚠️ ultralytics 실패'
-pip install ftfy || echo '⚠️ ftfy 실패'
-pip install bitsandbytes xformers || echo '⚠️ bitsandbytes 또는 xformers 설치 실패'
-pip install sageattention || echo '⚠️ sageattention 설치 실패'
+    pip install facelib==0.2.2 mtcnn==0.1.1 || echo '⚠️ facelib 실패'
+    pip install facexlib basicsr gfpgan realesrgan || echo '⚠️ facexlib 실패'
+    pip install timm || echo '⚠️ timm 실패'
+    pip install ultralytics || echo '⚠️ ultralytics 실패'
+    pip install ftfy || echo '⚠️ ftfy 실패'
+    pip install bitsandbytes xformers || echo '⚠️ bitsandbytes 또는 xformers 설치 실패'
+    pip install sageattention || echo '⚠️ sageattention 설치 실패'
+    
+    # 마커 생성 (컨테이너 재시작 전까지 유지됨)
+    touch "/tmp/.a1_sys_pkg_checked"
+else
+    echo "⏩ 시스템 패키지 설치 확인됨 (스킵)"
+fi
 
 ############################################
 # 📁 커스텀 노드 설치 (안 깨지게 서브셸로)
@@ -95,6 +100,18 @@ for d in */; do
     fi
   fi
 done
+
+# 🔁 WanVideoWrapper 스마트 의존성 복구 (휘발성 마커 사용)
+# 컨테이너 재시작 시에는 마커가 없으므로 설치 진행, 이후엔 스킵
+if [ -d "ComfyUI-WanVideoWrapper" ] && [ ! -f "/tmp/.wan_wrapper_checked" ]; then
+  echo "🔁 WanVideoWrapper 의존성 확인 및 복구..."
+  cd ComfyUI-WanVideoWrapper
+  # 요구사항 설치 (이미 만족하면 빠름)
+  pip install -r requirements.txt 2>/dev/null && touch "/tmp/.wan_wrapper_checked"
+  cd ..
+else
+  echo "⏩ WanVideoWrapper 의존성 확인됨 (스킵)"
+fi
 
 echo "✅ 모든 커스텀 노드 의존성 복구 완료"
 echo "🚀 다음 단계로 넘어갑니다"
