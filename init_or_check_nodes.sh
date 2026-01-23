@@ -17,15 +17,6 @@ pip install torchaudio || echo '⚠️ torchaudio 설치 실패'
 ############################################
 echo '📦 파이썬 패키지 설치'
 
-############################################
-# 🔒 kijai 안정 조합 버전 고정 (중요)
-############################################
-pip install --no-cache-dir \
-  diffusers==0.33.2 \
-  accelerate==1.2.1 \
-  peft==0.17.0 \
-  gguf==0.17.1 || echo '⚠️ kijai pin install 실패'
-
 pip install --no-cache-dir \
     GitPython onnx onnxruntime opencv-python-headless tqdm requests \
     scikit-image piexif packaging transformers accelerate peft sentencepiece \
@@ -71,7 +62,10 @@ git clone https://github.com/kijai/ComfyUI-WanVideoWrapper.git && (cd ComfyUI-Wa
 git clone https://github.com/kijai/ComfyUI-WanAnimatePreprocess.git && (cd ComfyUI-WanAnimatePreprocess && git checkout 1a35b81) || echo '⚠️ ComfyUI-WanAnimatePreprocess 설치 실패(15)'
 git clone https://github.com/kijai/ComfyUI-SCAIL-Pose.git && (cd ComfyUI-SCAIL-Pose && git checkout 11402b1) || echo '⚠️ ComfyUI-SCAIL-Pose 설치 실패(16)'
 
+
 )
+
+
 
 ############################################
 # ⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇
