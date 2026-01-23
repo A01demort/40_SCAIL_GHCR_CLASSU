@@ -31,4 +31,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/a01demort/40_scail_comfyui_classu:v1.0.13
+          tags: ghcr.io/a01demort/40_scail_comfyui_classu:v1.0.14
