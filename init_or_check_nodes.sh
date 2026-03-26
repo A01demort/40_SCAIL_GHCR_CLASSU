@@ -12,19 +12,21 @@ if [ ! -f "/tmp/.a1_sys_pkg_checked" ]; then
 
     # 🔥 [CRITICAL] Torch 버전 완전 재설치 (버전 불일치 방지)
     # 기존 버전 제거 (찌꺼기 방지)
-    pip uninstall -y torch torchvision torchaudio
-
-    # 최신 노드(WanVideo) 호환을 위해 Torch 2.4.1 + CUDA 12.1 조합으로 업그레이드
-    # (이전 2.1.2는 너무 구버전이라 다른 패키지가 Torch만 몰래 업그레이드해서 깨짐)
-    pip install torch==2.4.1 torchvision==0.19.1 torchaudio==2.4.1 --index-url https://download.pytorch.org/whl/cu121 || echo '⚠️ Torch 재설치 실패'
-
+    # ✅ 수정
+    pip uninstall -y torch torchvision torchaudio xformers
+    
+    # CUDA 12.4 드라이버 호환을 위해 cu124로 변경
+    pip install torch==2.4.1 torchvision==0.19.1 torchaudio==2.4.1 --index-url https://download.pytorch.org/whl/cu124 || echo '⚠️ Torch 재설치 실패'
+    pip install xformers==0.0.28.post1 --index-url https://download.pytorch.org/whl/cu124 || echo '⚠️ xformers 설치 실패'
+    
     # 필수 의존성 및 누락 패키지(pydantic-settings) 추가
     pip install torchsde av pydantic-settings || echo '⚠️ 초기 의존성 설치 실패'
 
     echo '📦 파이썬 패키지 설치'
 
-    pip install --no-cache-dir \
-        GitPython onnx onnxruntime opencv-python-headless tqdm requests \
+    # ✅ 수정
+        pip install --no-cache-dir \
+        GitPython onnx onnxruntime-gpu==1.16.3 numpy==1.26.4 opencv-python-headless tqdm requests \
         scikit-image piexif packaging transformers accelerate peft sentencepiece \
         protobuf scipy einops pandas matplotlib imageio[ffmpeg] pyzbar pillow numba \
         gguf diffusers insightface dill taichi pyloudnorm || echo '⚠️ 일부 pip 설치 실패'
