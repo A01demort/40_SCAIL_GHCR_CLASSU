@@ -133,6 +133,61 @@ else
   echo "⏩ WanVideoWrapper 의존성 확인됨 (스킵)"
 fi
 
+# ================================================================
+# 🩹 WanVideoWrapper fp16 accumulation 패치
+# torch.backends.cuda.matmul.allow_fp16_accumulation은
+# torch 2.7.0.dev nightly 이상에서만 지원됨.
+# 현재 torch 2.5.1 에서 fp16 fast 모드가 동작하도록
+# 해당 호출을 try/except 블록으로 안전하게 처리.
+# ================================================================
+WAN_WRAPPER_DIR="/workspace/ComfyUI/custom_nodes/ComfyUI-WanVideoWrapper"
+FP16_PATCH_MARKER="/tmp/.wan_fp16_patch_applied"
+
+if [ -d "$WAN_WRAPPER_DIR" ] && [ ! -f "$FP16_PATCH_MARKER" ]; then
+  echo "🩹 WanVideoWrapper fp16 accumulation 호환성 패치 적용 중..."
+
+  # allow_fp16_accumulation 호출이 있는 모든 .py 파일에 패치 적용
+  find "$WAN_WRAPPER_DIR" -name "*.py" | while read -r pyfile; do
+    if grep -q "allow_fp16_accumulation" "$pyfile"; then
+      echo "  → 패치 대상: $pyfile"
+
+      python3 - <<'PYEOF' "$pyfile"
+import sys, re
+
+filepath = sys.argv[1]
+with open(filepath, 'r', encoding='utf-8') as f:
+    content = f.read()
+
+# 이미 패치된 경우 스킵
+if 'hasattr(torch.backends.cuda.matmul' in content:
+    print(f"  ⏩ 이미 패치됨: {filepath}")
+    sys.exit(0)
+
+# torch.backends.cuda.matmul.allow_fp16_accumulation = True/False 패턴을 안전한 코드로 교체
+pattern = r'([ \t]*)(torch\.backends\.cuda\.matmul\.allow_fp16_accumulation\s*=\s*.+)'
+replacement = (
+    r'\1if hasattr(torch.backends.cuda.matmul, "allow_fp16_accumulation"):\n'
+    r'\1    \2'
+)
+new_content = re.sub(pattern, replacement, content)
+
+if new_content != content:
+    with open(filepath, 'w', encoding='utf-8') as f:
+        f.write(new_content)
+    print(f"  ✅ 패치 완료: {filepath}")
+else:
+    print(f"  ⏩ 패치 불필요: {filepath}")
+PYEOF
+
+    fi
+  done
+
+  touch "$FP16_PATCH_MARKER"
+  echo "✅ fp16 accumulation 패치 완료 (torch 2.5.1 호환)"
+else
+  echo "⏩ fp16 accumulation 패치 확인됨 (스킵)"
+fi
+
 echo "✅ 모든 커스텀 노드 의존성 복구 완료"
 echo "🚀 다음 단계로 넘어갑니다"
 echo -e "\n====🎓 AI 교육 & 커뮤니티 안내====\n"
