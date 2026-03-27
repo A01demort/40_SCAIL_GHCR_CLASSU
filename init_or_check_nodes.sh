@@ -134,85 +134,42 @@ else
 fi
 
 # ================================================================
-# 🩹 WanVideoWrapper fp16 accumulation 패치 (v3 - 정확한 문자열 치환)
-# 진단 확인된 실제 코드 구조:
-#   if base_precision == "fp16_fast":
-#       if hasattr(torch.backends.cuda.matmul, "allow_fp16_accumulation"):
-#           torch.backends.cuda.matmul.allow_fp16_accumulation = True
-#       else:
-#           raise ValueError("...not available...")  ← 이걸 pass로 교체
+# 🩹 WanVideoWrapper fp16 accumulation 패치 (sed 직접 치환 - 최종)
+# nodes_model_loading.py 의 raise ValueError 라인을 pass로 교체
+# sed로 해당 패턴이 있는 라인 전체를 한 번에 치환 (가장 단순하고 확실)
+# + pyc 캐시 삭제 필수 (캐시가 있으면 .py 수정해도 무의미)
 # ================================================================
 WAN_WRAPPER_DIR="/workspace/ComfyUI/custom_nodes/ComfyUI-WanVideoWrapper"
-FP16_PATCH_MARKER="/tmp/.wan_fp16_patch_v3_applied"
+TARGET_PY="$WAN_WRAPPER_DIR/nodes_model_loading.py"
 
 # 구버전 마커 모두 삭제
-rm -f /tmp/.wan_fp16_patch_applied /tmp/.wan_fp16_patch_v2_applied
+rm -f /tmp/.wan_fp16_patch_applied /tmp/.wan_fp16_patch_v2_applied /tmp/.wan_fp16_patch_v3_applied
 
-if [ -d "$WAN_WRAPPER_DIR" ] && [ ! -f "$FP16_PATCH_MARKER" ]; then
-  echo "🩹 WanVideoWrapper fp16 호환성 패치 v3 적용 중..."
-
-  # Python 패치 스크립트를 파일로 저장 (정확한 문자열 치환 방식)
-  cat > /tmp/wan_fp16_patcher_v3.py << 'PYEOF'
-import os
-
-target_dir = os.sys.argv[1]
-TARGET_FILE = os.path.join(target_dir, "nodes_model_loading.py")
-
-if not os.path.exists(TARGET_FILE):
-    print(f"⚠️ 파일 없음: {TARGET_FILE}")
-    exit(1)
-
-with open(TARGET_FILE, 'r', encoding='utf-8') as f:
-    content = f.read()
-
-if '[A1-PATCH-V3]' in content:
-    print("⏩ 이미 v3 패치 적용됨, 스킵")
-    # pyc 캐시만 삭제
-    pycache = os.path.join(target_dir, "__pycache__")
-    if os.path.isdir(pycache):
-        for fn in os.listdir(pycache):
-            if fn.endswith(".pyc"):
-                os.remove(os.path.join(pycache, fn))
-    exit(0)
-
-# 정확한 문자열 치환 (진단으로 확인된 실제 코드)
-OLD = '            else:\n                raise ValueError("torch.backends.cuda.matmul.allow_fp16_accumulation is not available in this version of torch,requires torch 2.7.0.dev2025 02 26 nightly minimum currently")'
-NEW = '            else:\n                pass  # [A1-PATCH-V3] fp16_fast: allow_fp16_accumulation not in torch<2.7, skip silently'
-
-if OLD in content:
-    content = content.replace(OLD, NEW)
-    with open(TARGET_FILE, 'w', encoding='utf-8') as f:
-        f.write(content)
-    print(f"✅ 패치 성공: {TARGET_FILE}")
-else:
-    print(f"⚠️ 치환 대상 문자열 없음 - 이미 패치됐거나 코드가 변경됨")
-    print("   현재 파일에서 raise ValueError 라인:")
-    for i, line in enumerate(content.splitlines(), 1):
-        if 'raise' in line and 'accumulation' in line:
-            print(f"   Line {i}: {line}")
-
-# pyc 캐시 삭제 (패치 후 반드시 필요)
-pycache = os.path.join(target_dir, "__pycache__")
-if os.path.isdir(pycache):
-    removed = 0
-    for fn in os.listdir(pycache):
-        if fn.endswith(".pyc"):
-            os.remove(os.path.join(pycache, fn))
-            removed += 1
-    print(f"🗑️ pyc 캐시 {removed}개 삭제 완료")
-PYEOF
-
-  python3 /tmp/wan_fp16_patcher_v3.py "$WAN_WRAPPER_DIR"
-  PATCH_RESULT=$?
-
-  if [ $PATCH_RESULT -eq 0 ]; then
-    touch "$FP16_PATCH_MARKER"
-    echo "✅ fp16 accumulation 패치 v3 완료 (torch 2.5.1 호환)"
+if [ -f "$TARGET_PY" ]; then
+  if grep -q "A1-PATCH-FINAL" "$TARGET_PY"; then
+    echo "⏩ fp16 패치 이미 적용됨 (스킵)"
   else
-    echo "⚠️ 패치 실패 (오류 코드: $PATCH_RESULT)"
+    echo "🩹 fp16 패치 적용 중 (sed 직접 치환)..."
+
+    # raise ValueError 라인을 pass로 교체
+    # 패턴: raise ValueError 와 allow_fp16_accumulation 이 같은 줄에 있는 라인
+    sed -i 's/.*raise ValueError.*allow_fp16_accumulation.*/                pass  # [A1-PATCH-FINAL] fp16_fast: skip on torch<2.7/' \
+      "$TARGET_PY"
+
+    # pyc 캐시 강제 삭제 (없으면 파이썬이 캐시 기반으로 실행)
+    find "$WAN_WRAPPER_DIR/__pycache__" -name "*.pyc" -delete 2>/dev/null
+    echo "✅ fp16 패치 완료 + pyc 캐시 삭제"
+
+    # 검증
+    if grep -q "A1-PATCH-FINAL" "$TARGET_PY"; then
+      echo "✅ 패치 검증 성공"
+    else
+      echo "⚠️ 패치 검증 실패 - raise 라인 확인:"
+      grep -n "raise.*accumulation" "$TARGET_PY" || echo "  (raise 라인 없음 - 이미 제거됨)"
+    fi
   fi
 else
-  echo "⏩ fp16 accumulation 패치 v3 확인됨 (스킵)"
+  echo "⚠️ $TARGET_PY 없음 - WanVideoWrapper 클론 전일 수 있음"
 fi
 
 echo "✅ 모든 커스텀 노드 의존성 복구 완료"
