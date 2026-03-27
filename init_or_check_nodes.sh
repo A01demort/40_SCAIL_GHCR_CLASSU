@@ -134,84 +134,85 @@ else
 fi
 
 # ================================================================
-# 🩹 WanVideoWrapper fp16 accumulation 패치 (v2 - raise 블록 포함)
-# torch.backends.cuda.matmul.allow_fp16_accumulation은
-# torch 2.7.0.dev nightly 이상에서만 지원됨.
-# WanVideoWrapper는 해당 속성 없으면 raise Exception 던짐 →
-# 그 raise 블록 자체를 제거하고, 대입문도 hasattr 가드로 처리.
+# 🩹 WanVideoWrapper fp16 accumulation 패치 (v3 - 정확한 문자열 치환)
+# 진단 확인된 실제 코드 구조:
+#   if base_precision == "fp16_fast":
+#       if hasattr(torch.backends.cuda.matmul, "allow_fp16_accumulation"):
+#           torch.backends.cuda.matmul.allow_fp16_accumulation = True
+#       else:
+#           raise ValueError("...not available...")  ← 이걸 pass로 교체
 # ================================================================
 WAN_WRAPPER_DIR="/workspace/ComfyUI/custom_nodes/ComfyUI-WanVideoWrapper"
-FP16_PATCH_MARKER="/tmp/.wan_fp16_patch_v2_applied"
+FP16_PATCH_MARKER="/tmp/.wan_fp16_patch_v3_applied"
 
-# 구버전 마커 삭제 (불완전 패치 재적용)
-rm -f /tmp/.wan_fp16_patch_applied
+# 구버전 마커 모두 삭제
+rm -f /tmp/.wan_fp16_patch_applied /tmp/.wan_fp16_patch_v2_applied
 
 if [ -d "$WAN_WRAPPER_DIR" ] && [ ! -f "$FP16_PATCH_MARKER" ]; then
-  echo "🩹 WanVideoWrapper fp16 호환성 패치 v2 적용 중..."
+  echo "🩹 WanVideoWrapper fp16 호환성 패치 v3 적용 중..."
 
-  # Python 패치 스크립트를 파일로 저장 후 실행 (heredoc 변수 이슈 방지)
-  cat > /tmp/wan_fp16_patcher.py << 'PYEOF'
-import sys, re, os
+  # Python 패치 스크립트를 파일로 저장 (정확한 문자열 치환 방식)
+  cat > /tmp/wan_fp16_patcher_v3.py << 'PYEOF'
+import os
 
-target_dir = sys.argv[1]
+target_dir = os.sys.argv[1]
+TARGET_FILE = os.path.join(target_dir, "nodes_model_loading.py")
 
-for root, dirs, files in os.walk(target_dir):
-    for fname in files:
-        if not fname.endswith('.py'):
-            continue
-        fpath = os.path.join(root, fname)
-        with open(fpath, 'r', encoding='utf-8') as f:
-            content = f.read()
+if not os.path.exists(TARGET_FILE):
+    print(f"⚠️ 파일 없음: {TARGET_FILE}")
+    exit(1)
 
-        if 'allow_fp16_accumulation' not in content:
-            continue
+with open(TARGET_FILE, 'r', encoding='utf-8') as f:
+    content = f.read()
 
-        print(f"  → 패치 대상: {fpath}")
-        original = content
+if '[A1-PATCH-V3]' in content:
+    print("⏩ 이미 v3 패치 적용됨, 스킵")
+    # pyc 캐시만 삭제
+    pycache = os.path.join(target_dir, "__pycache__")
+    if os.path.isdir(pycache):
+        for fn in os.listdir(pycache):
+            if fn.endswith(".pyc"):
+                os.remove(os.path.join(pycache, fn))
+    exit(0)
 
-        # ── 패치 1: if not hasattr(...): raise ... 블록 제거 ──────────────
-        # WanVideoWrapper 실제 패턴:
-        #   if not hasattr(torch.backends.cuda.matmul, "allow_fp16_accumulation"):
-        #       raise Exception("...is not available...")
-        content = re.sub(
-            r'[ \t]*if\s+not\s+hasattr\s*\(\s*torch\.backends\.cuda\.matmul\s*,\s*["\']allow_fp16_accumulation["\']\s*\)\s*:\s*\n'
-            r'[ \t]*raise\s+[^\n]+\n',
-            '        # [A1-PATCH] allow_fp16_accumulation not-available check removed for torch<2.7 compat\n',
-            content,
-            flags=re.MULTILINE
-        )
+# 정확한 문자열 치환 (진단으로 확인된 실제 코드)
+OLD = '            else:\n                raise ValueError("torch.backends.cuda.matmul.allow_fp16_accumulation is not available in this version of torch,requires torch 2.7.0.dev2025 02 26 nightly minimum currently")'
+NEW = '            else:\n                pass  # [A1-PATCH-V3] fp16_fast: allow_fp16_accumulation not in torch<2.7, skip silently'
 
-        # ── 패치 2: 직접 대입문을 hasattr 가드로 감싸기 ──────────────────
-        # torch.backends.cuda.matmul.allow_fp16_accumulation = True/False
-        if 'hasattr(torch.backends.cuda.matmul, "allow_fp16_accumulation")' not in content:
-            content = re.sub(
-                r'^([ \t]*)(torch\.backends\.cuda\.matmul\.allow_fp16_accumulation\s*=\s*.+)$',
-                r'\1if hasattr(torch.backends.cuda.matmul, "allow_fp16_accumulation"):\n\1    \2',
-                content,
-                flags=re.MULTILINE
-            )
+if OLD in content:
+    content = content.replace(OLD, NEW)
+    with open(TARGET_FILE, 'w', encoding='utf-8') as f:
+        f.write(content)
+    print(f"✅ 패치 성공: {TARGET_FILE}")
+else:
+    print(f"⚠️ 치환 대상 문자열 없음 - 이미 패치됐거나 코드가 변경됨")
+    print("   현재 파일에서 raise ValueError 라인:")
+    for i, line in enumerate(content.splitlines(), 1):
+        if 'raise' in line and 'accumulation' in line:
+            print(f"   Line {i}: {line}")
 
-        if content != original:
-            with open(fpath, 'w', encoding='utf-8') as f:
-                f.write(content)
-            print(f"  ✅ 패치 완료: {fpath}")
-        else:
-            print(f"  ⏩ 변경 없음: {fpath}")
-
-print("패치 스크립트 완료")
+# pyc 캐시 삭제 (패치 후 반드시 필요)
+pycache = os.path.join(target_dir, "__pycache__")
+if os.path.isdir(pycache):
+    removed = 0
+    for fn in os.listdir(pycache):
+        if fn.endswith(".pyc"):
+            os.remove(os.path.join(pycache, fn))
+            removed += 1
+    print(f"🗑️ pyc 캐시 {removed}개 삭제 완료")
 PYEOF
 
-  python3 /tmp/wan_fp16_patcher.py "$WAN_WRAPPER_DIR"
+  python3 /tmp/wan_fp16_patcher_v3.py "$WAN_WRAPPER_DIR"
   PATCH_RESULT=$?
 
   if [ $PATCH_RESULT -eq 0 ]; then
     touch "$FP16_PATCH_MARKER"
-    echo "✅ fp16 accumulation 패치 v2 완료 (torch 2.5.1 호환)"
+    echo "✅ fp16 accumulation 패치 v3 완료 (torch 2.5.1 호환)"
   else
     echo "⚠️ 패치 실패 (오류 코드: $PATCH_RESULT)"
   fi
 else
-  echo "⏩ fp16 accumulation 패치 v2 확인됨 (스킵)"
+  echo "⏩ fp16 accumulation 패치 v3 확인됨 (스킵)"
 fi
 
 echo "✅ 모든 커스텀 노드 의존성 복구 완료"
