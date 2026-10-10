@@ -74,7 +74,7 @@ def verify_runtime():
         torch_names = {'torch', 'torchvision', 'torchaudio'}
         if any(name in torch_names for name, _, _ in mismatches()):
             run([sys.executable, '-m', 'pip', 'install', 'torch==2.5.1+cu124', 'torchvision==0.20.1+cu124', 'torchaudio==2.5.1+cu124', '--index-url', 'https://download.pytorch.org/whl/cu124'])
-        run([sys.executable, '-m', 'pip', 'install', '-r', str(ROOT / 'required.txt')])
+        run([sys.executable, '-m', 'pip', 'install', '-r', str(ROOT / 'required.txt'), '--extra-index-url', 'https://download.pytorch.org/whl/cu124'])
     if not ctypes.util.find_library('zbar'):
         run(['apt-get', 'update', '-qq'])
         run(['apt-get', 'install', '-y', 'libzbar0'])
@@ -97,6 +97,7 @@ import skimage,scipy,numba,timm,av,torchsde,pymatting,albumentations,aiofiles,yp
 from pyzbar.pyzbar import decode
 from transformers import BlipProcessor,BlipForConditionalGeneration,BlipForQuestionAnswering,pipeline,AutoModelForSeq2SeqLM,AutoTokenizer,AutoModel,AutoProcessor,StoppingCriteria,StoppingCriteriaList,AutoModelForCausalLM
 from diffusers import FlowMatchEulerDiscreteScheduler
+from sam2.build_sam import build_sam2
 assert torch.__version__ == "2.5.1+cu124"
 assert numpy.__version__ == "1.26.4"
 assert cv2.__version__ == "4.11.0"
@@ -129,6 +130,16 @@ def prepare_init(before, build=False):
         raise RuntimeError('Expected original package marker')
     command = ('/usr/bin/python -B ' + shlex.quote(str(ROOT / 'bootstrap.py'))).encode()
     after = after.replace(gate, gate[:-6] + b' && ! ' + command + b' --packages-ready; then', 1)
+    install = b'    if pip install -r "$req_file"; then'
+    if after.count(install) != 1:
+        raise RuntimeError('Expected original node requirements installation')
+    after = after.replace(install,
+        b'    if [ "$d" = "ComfyUI-Impact-Pack/" ]; then\n'
+        b'      scail_pip_args=(--extra-index-url https://download.pytorch.org/whl/cu124)\n'
+        b'    else\n'
+        b'      scail_pip_args=()\n'
+        b'    fi\n'
+        b'    if pip install "${scail_pip_args[@]}" -r "$req_file"; then', 1)
     anchor = 'echo "\u2705 \ubaa8\ub4e0 \ucee4\uc2a4\ud140 \ub178\ub4dc \uc758\uc874\uc131 \ubcf5\uad6c \uc644\ub8cc"'.encode()
     if after.count(anchor) != 1:
         raise RuntimeError('Expected original completion message')
@@ -155,7 +166,8 @@ def main():
         return 0
     original = Path(args.init_script)
     before = original.read_bytes()
-    prepared = prepare_init(before, build=BUILD)
+    template = ROOT / 'init_or_check_nodes.sh'
+    prepared = prepare_init(template.read_bytes() if template.is_file() else before, build=BUILD)
     with tempfile.TemporaryDirectory(prefix='scail-init-') as folder:
         temporary = Path(folder) / 'init_or_check_nodes.sh'
         temporary.write_bytes(prepared)

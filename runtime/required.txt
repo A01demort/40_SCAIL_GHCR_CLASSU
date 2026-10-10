@@ -64,3 +64,4 @@ PyMatting==1.1.16
 albumentations==2.0.8
 kornia==0.8.2
 spandrel==0.4.2
+SAM-2==1.0

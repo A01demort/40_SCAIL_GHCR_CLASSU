@@ -72,6 +72,7 @@ PYCONF
 # A1 폴더 생성 + 초기화/배너 스크립트 복사
 RUN mkdir -p /workspace/A1
 COPY init_or_check_nodes.sh /workspace/A1/init_or_check_nodes.sh
+COPY init_or_check_nodes.sh /opt/scail-runtime-fix/init_or_check_nodes.sh
 COPY startup_banner.sh /workspace/A1/startup_banner.sh
 RUN chmod +x /workspace/A1/init_or_check_nodes.sh && \
     chmod +x /workspace/A1/startup_banner.sh
