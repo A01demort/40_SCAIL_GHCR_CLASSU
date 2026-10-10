@@ -51,6 +51,35 @@ def patch_file(path, old, new):
     path.write_bytes(after)
 
 
+def prepare_impact_requirements(before):
+    source = next(line for line in (ROOT / 'constraints.txt').read_text().splitlines() if line.startswith('SAM-2 @ '))
+    pinned = source.split(' @ ', 1)[1].encode()
+    lines = before.splitlines(True)
+    if any(line.strip() == pinned for line in lines):
+        return before
+    matches = [index for index, line in enumerate(lines) if line.strip() == b'git+https://github.com/facebookresearch/sam2']
+    if len(matches) != 1:
+        raise RuntimeError('Expected original Impact-Pack SAM-2 requirement')
+    lines[matches[0]] = lines[matches[0]].replace(b'git+https://github.com/facebookresearch/sam2', pinned, 1)
+    after = b''.join(lines)
+    assert [line for line in before.splitlines() if line.lstrip().startswith(b'#')] == [line for line in after.splitlines() if line.lstrip().startswith(b'#')]
+    return after
+
+
+def verify_nodes():
+    source = (ROOT / 'init_or_check_nodes.sh').read_bytes()
+    names = re.findall(rb'^git clone https://github.com/[^/]+/([^ ]+)\.git', source, re.MULTILINE)
+    if len(names) != 20:
+        raise RuntimeError('Expected 20 original node repositories')
+    for name in names:
+        node = CORE / 'custom_nodes' / name.decode()
+        if not (node / '.git').is_dir():
+            raise RuntimeError('Original node repository missing: ' + name.decode())
+        if (node / 'requirements.txt').is_file() and not (node / '.installed').is_file():
+            raise RuntimeError('Node requirements installation did not finish: ' + name.decode())
+    print('SCAIL custom node check passed: 20 original repositories and requirement markers', flush=True)
+
+
 def ensure_frontend():
     target = CORE / 'web_custom_versions/Comfy-Org_ComfyUI_frontend/1.37.2'
     if (target / 'index.html').is_file():
@@ -75,6 +104,7 @@ def verify_runtime():
         if any(name in torch_names for name, _, _ in mismatches()):
             run([sys.executable, '-m', 'pip', 'install', 'torch==2.5.1+cu124', 'torchvision==0.20.1+cu124', 'torchaudio==2.5.1+cu124', '--index-url', 'https://download.pytorch.org/whl/cu124'])
         run([sys.executable, '-m', 'pip', 'install', '-r', str(ROOT / 'required.txt'), '--extra-index-url', 'https://download.pytorch.org/whl/cu124'])
+    verify_nodes()
     if not ctypes.util.find_library('zbar'):
         run(['apt-get', 'update', '-qq'])
         run(['apt-get', 'install', '-y', 'libzbar0'])
@@ -135,11 +165,11 @@ def prepare_init(before, build=False):
         raise RuntimeError('Expected original node requirements installation')
     after = after.replace(install,
         b'    if [ "$d" = "ComfyUI-Impact-Pack/" ]; then\n'
-        b'      scail_pip_args=(--extra-index-url https://download.pytorch.org/whl/cu124)\n'
+        b'      scail_pip_command=(' + command + b' --install-impact-requirements "$req_file")\n'
         b'    else\n'
-        b'      scail_pip_args=()\n'
+        b'      scail_pip_command=(pip install -r "$req_file")\n'
         b'    fi\n'
-        b'    if pip install "${scail_pip_args[@]}" -r "$req_file"; then', 1)
+        b'    if "${scail_pip_command[@]}"; then', 1)
     anchor = 'echo "\u2705 \ubaa8\ub4e0 \ucee4\uc2a4\ud140 \ub178\ub4dc \uc758\uc874\uc131 \ubcf5\uad6c \uc644\ub8cc"'.encode()
     if after.count(anchor) != 1:
         raise RuntimeError('Expected original completion message')
@@ -156,11 +186,22 @@ def main():
     parser.add_argument('--verify', action='store_true')
     parser.add_argument('--packages-ready', action='store_true')
     parser.add_argument('--validate-source', action='store_true')
+    parser.add_argument('--install-impact-requirements')
     parser.add_argument('init_script', nargs='?', default='/workspace/A1/init_or_check_nodes.sh')
     args = parser.parse_args()
     BUILD = args.build
     if args.packages_ready:
         return int(bool(mismatches()))
+    if args.install_impact_requirements:
+        original = Path(args.install_impact_requirements).resolve()
+        before = original.read_bytes()
+        prepared = prepare_impact_requirements(before)
+        with tempfile.TemporaryDirectory(prefix='scail-impact-') as folder:
+            temporary = Path(folder) / 'requirements.txt'
+            temporary.write_bytes(prepared)
+            run([sys.executable, '-m', 'pip', 'install', '-r', str(temporary), '--extra-index-url', 'https://download.pytorch.org/whl/cu124'])
+        assert original.read_bytes() == before, 'Original node requirements changed'
+        return 0
     if args.verify:
         verify_runtime()
         return 0
