@@ -2,7 +2,4 @@
 Dockerfile text eol=lf
 *.py text eol=lf
 *.txt text eol=lf
-*.json text eol=lf
 *.yml text eol=lf
-# Preserve upstream snapshots byte-for-byte for the source hash checks.
-requirements/upstream/*.txt -text whitespace=cr-at-eol

@@ -1,15 +1,13 @@
-#!/usr/bin/env bash
-set -Eeuo pipefail
+#!/bin/bash
 
 # ⏳ ComfyUI 실행 대기 (배너 타이밍 동기화)
 echo "⏳ ComfyUI 로딩 대기 중..."
-# 300초(5분) 제한 안에 필수 노드 로딩까지 확인한 뒤 원래 배너를 표시합니다.
-python /opt/scail/scripts/verify_workflow.py --log /workspace/scail-logs/comfyui.log --timeout 300
+# 300초(5분) 타임아웃 방지 (무한대기 방지용 카운터는 생략, 단순 루프)
+while ! curl -s http://localhost:8188 >/dev/null; do
+  sleep 3
+done
 
-# RunPod 로그에는 TERM이 없을 수 있으므로 터미널에서만 화면을 지웁니다.
-if [[ -t 1 && -n "${TERM:-}" && "${TERM}" != dumb ]]; then
-  clear
-fi
+clear
 
 cat <<'EOF'
 
@@ -56,6 +54,6 @@ cat <<'EOF'
         🚀 AI는 에이원 : https://www.youtube.com/@A01demort
         🚀 Stable AI KOREA : https://cafe.naver.com/sdfkorea
         🚀 DISCORD : https://discord.gg/zdQrpU24NE
-
-
+        
+        
 EOF

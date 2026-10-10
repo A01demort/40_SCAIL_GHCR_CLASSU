@@ -1,15 +1,4 @@
-.research/
-.tools/
 __pycache__/
-test-results/
+*.pyc
 *.zip
-
-# Local data and credentials.
-/workflows/
-/private/
-/attachments/
-/input/
-/output/
 *.log
-.env
-.env.*

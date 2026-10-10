@@ -1,23 +1,16 @@
-# SCAIL RunPod v1.0.24
+# SCAIL 1.0.25
 
-이미지: `ghcr.io/a01demort/40_scail_comfyui_classu:v1.0.24`
+기존 버전: `ghcr.io/a01demort/40_scail_comfyui_classu:v1.0.23`
 
-- RunPod 볼륨: `/workspace` · ComfyUI: `8188` · Jupyter: `8888`
-- 첫 실행 시 고정된 패키지와 커스텀 노드 20개를 볼륨에 설치합니다. 설치 중에는 Pod 로그를 확인하세요.
-- 재시작 시 설치된 환경을 검사하고 재사용합니다. GPU 검사는 RunPod에서 실행합니다.
-- ComfyUI `0.7.0` · 프런트엔드 `1.37.2` · Torch `2.5.1+cu124`
-- 모델 로더의 precision은 `fp16`을 사용합니다.
-
-모델 다운로드:
-
-```bash
-bash /workspace/A1/SCAIL_down_a1.sh
-# VACE 사용 시
-bash /workspace/A1/Wan2.1_Vace_a1.sh
+사용할 버전:
+```text
+ghcr.io/a01demort/40_scail_comfyui_classu:v1.0.25
 ```
 
-필요한 Hugging Face 인증은 `HF_TOKEN` 환경 변수로 설정합니다.
-`startup_banner.sh`와 `init_or_check_nodes.sh`도 `/workspace/A1/`에 있습니다.
+- Torch 2.5.1과 최신 라이브러리 충돌 → 검증한 호환 버전 고정.
+- NumPy/OpenCV 충돌, ONNX의 CPU 덮어쓰기 → 버전 정렬과 GPU 복구.
+- BasicSR import 오류와 누락 의존성 → import 수정 및 필수 패키지 설치.
+- 프런트엔드 다운로드 오류 → 기존 1.37.2 캐시 우선 사용.
+- 재시작 때 의존성을 검사·복구하며 기존 설정을 유지.
 
-버전 변경은 `locks/`와 `requirements/`를 갱신한 뒤 새 이미지를 빌드합니다.
-`main` 푸시 또는 Actions 수동 실행으로 GHCR에 게시하며, 운영 시에는 게시된 이미지의 digest를 사용하세요.
+1.0.23의 기본 sh 파일, 주석, 설치 완료 멘트와 재시작 배너는 그대로 유지합니다.

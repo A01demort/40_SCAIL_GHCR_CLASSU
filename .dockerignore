@@ -1,15 +1,5 @@
 .git
-.research
-.tools
 __pycache__
-**/__pycache__
+*.pyc
 *.zip
-test-results
-workflows
-private
-attachments
-input
-output
 *.log
-.env
-.env.*
