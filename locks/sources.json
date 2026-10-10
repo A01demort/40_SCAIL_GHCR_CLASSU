@@ -1,0 +1,156 @@
+{
+  "schema": 1,
+  "repositories": [
+    {
+      "name": "core",
+      "url": "https://github.com/comfyanonymous/ComfyUI.git",
+      "commit": "f59f71cf34067d46713f6243312f7f0b360d061f",
+      "path": ".",
+      "requirements_sha256": "07d4f1d4e46d3d1503116887e6735ae68f6ce0e42daeb686289ba69acbf59f4c"
+    },
+    {
+      "name": "manager",
+      "url": "https://github.com/ltdrdata/ComfyUI-Manager.git",
+      "commit": "fa009e729ee4a09202ebf9c404c47812efcd29c6",
+      "path": "custom_nodes/ComfyUI-Manager",
+      "requirements_sha256": "79e080784300a01c9057d0a1ad55a88d2df56d516fe7b1050663811b818da3d1"
+    },
+    {
+      "name": "custom_scripts",
+      "url": "https://github.com/pythongosssss/ComfyUI-Custom-Scripts.git",
+      "commit": "f2838ed5e59de4d73cde5c98354b87a8d3200190",
+      "path": "custom_nodes/ComfyUI-Custom-Scripts",
+      "requirements_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "requirements_file": null
+    },
+    {
+      "name": "rgthree",
+      "url": "https://github.com/rgthree/rgthree-comfy.git",
+      "commit": "8ff50e4521881eca1fe26aec9615fc9362474931",
+      "path": "custom_nodes/rgthree-comfy",
+      "requirements_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "was",
+      "url": "https://github.com/WASasquatch/was-node-suite-comfyui.git",
+      "commit": "ea935d1044ae5a26efa54ebeb18fe9020af49a45",
+      "path": "custom_nodes/was-node-suite-comfyui",
+      "requirements_sha256": "5b68a8f92c0a904ca536ce1609aefe9b3a8f3c3fe86f86cea38abfaec56bf970"
+    },
+    {
+      "name": "kj",
+      "url": "https://github.com/kijai/ComfyUI-KJNodes.git",
+      "commit": "7b1327192e4729085788a3020a9cbb095e0c7811",
+      "path": "custom_nodes/ComfyUI-KJNodes",
+      "requirements_sha256": "31d50e14eb5500729b61b6b0f4a85df361f62b4cc9774a53a00bfec734e7a9c4"
+    },
+    {
+      "name": "essentials",
+      "url": "https://github.com/cubiq/ComfyUI_essentials.git",
+      "commit": "9d9f4bedfc9f0321c19faf71855e228c93bd0dc9",
+      "path": "custom_nodes/ComfyUI_essentials",
+      "requirements_sha256": "075836eae22a6c13bf4be71e92397096994f3cf8d748038773c681319795bdc3"
+    },
+    {
+      "name": "comfyroll",
+      "url": "https://github.com/Suzie1/ComfyUI_Comfyroll_CustomNodes.git",
+      "commit": "d78b780ae43fcf8c6b7c6505e6ffb4584281ceca",
+      "path": "custom_nodes/ComfyUI_Comfyroll_CustomNodes",
+      "requirements_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "requirements_file": null
+    },
+    {
+      "name": "gguf",
+      "url": "https://github.com/city96/ComfyUI-GGUF.git",
+      "commit": "795e45156ece99afbc3efef911e63fcb46e6a20d",
+      "path": "custom_nodes/ComfyUI-GGUF",
+      "requirements_sha256": "7f044de2d008cd7a4db54c27efc206327517bca4eb3e0f0835cf769b98d9de6c"
+    },
+    {
+      "name": "reactor",
+      "url": "https://github.com/Gourieff/ComfyUI-ReActor.git",
+      "commit": "d60458f212e8c7a496269bbd29ca7c6a3198239a",
+      "path": "custom_nodes/ComfyUI-ReActor",
+      "requirements_sha256": "549b5a7ea7099ebaadbc950776d4da860b306904f8cdee71d7516a00e87e7c2e"
+    },
+    {
+      "name": "easy",
+      "url": "https://github.com/yolain/ComfyUI-Easy-Use.git",
+      "commit": "23d9c365bda79f4d45d6d6de4746b3fcd993d943",
+      "path": "custom_nodes/ComfyUI-Easy-Use",
+      "requirements_sha256": "292b3d278ba23f289f7a68fc1b36499ac5caf3b50a687d88bacd19f6b3105592"
+    },
+    {
+      "name": "vhs",
+      "url": "https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite.git",
+      "commit": "3234937ff5f3ca19068aaba5042771514de2429d",
+      "path": "custom_nodes/ComfyUI-VideoHelperSuite",
+      "requirements_sha256": "dbf7158d81418ace41097db503440bb70f41b6250d5d0b3ab3b3c86271b7b2a3"
+    },
+    {
+      "name": "framepack",
+      "url": "https://github.com/kijai/ComfyUI-FramePackWrapper.git",
+      "commit": "a7c4b704455aee0d016143f2fc232928cc0f1d83",
+      "path": "custom_nodes/ComfyUI-FramePackWrapper",
+      "requirements_sha256": "813264203989b54561fc75a5dbd64cfff0a7f0e03abc8ab5afda7e7479611497"
+    },
+    {
+      "name": "multigpu",
+      "url": "https://github.com/pollockjj/ComfyUI-MultiGPU.git",
+      "commit": "6e4181a7bb5e2ef147aa8e1d0845098a709306a4",
+      "path": "custom_nodes/ComfyUI-MultiGPU",
+      "requirements_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "requirements_file": null
+    },
+    {
+      "name": "controlnet_aux",
+      "url": "https://github.com/Fannovel16/comfyui_controlnet_aux.git",
+      "commit": "59b027e088c1c8facf7258f6e392d16d204b4d27",
+      "path": "custom_nodes/comfyui_controlnet_aux",
+      "requirements_sha256": "cba673ae229f377665e26c98f882325570e2f3ca1e6d4ab270508d430f5a9bff"
+    },
+    {
+      "name": "layer",
+      "url": "https://github.com/chflame163/ComfyUI_LayerStyle.git",
+      "commit": "5840264d0d7cb47185acfed28c02848e94c6a894",
+      "path": "custom_nodes/ComfyUI_LayerStyle",
+      "requirements_sha256": "0f35512e666f3c5912927cc76e9076b2a77e11e5c614cbd3f1d7cace07f23e69"
+    },
+    {
+      "name": "interpolation",
+      "url": "https://github.com/Fannovel16/ComfyUI-Frame-Interpolation.git",
+      "commit": "a969c01dbccd9e5510641be04eb51fe93f6bfc3d",
+      "path": "custom_nodes/ComfyUI-Frame-Interpolation",
+      "requirements_sha256": "0afdab540356482761245927f0ef4e4453ff4135834f4546a45a00359cda3215",
+      "requirements_file": "requirements-no-cupy.txt"
+    },
+    {
+      "name": "impact",
+      "url": "https://github.com/ltdrdata/ComfyUI-Impact-Pack.git",
+      "commit": "51b7dcdffa35c0bf6b9f85a235136d71172c8116",
+      "path": "custom_nodes/ComfyUI-Impact-Pack",
+      "requirements_sha256": "a8220b5c17eabc1edb99739679b65907cc17d8d4dd0980f73fe638989b4365a8"
+    },
+    {
+      "name": "wan",
+      "url": "https://github.com/kijai/ComfyUI-WanVideoWrapper.git",
+      "commit": "2ee9e2f3561b6f387024291d7d134ef8b2d6d344",
+      "path": "custom_nodes/ComfyUI-WanVideoWrapper",
+      "requirements_sha256": "5aa03215beae843479082acda6a68b07a62151b62d8795255599c6c8377634da"
+    },
+    {
+      "name": "animate",
+      "url": "https://github.com/kijai/ComfyUI-WanAnimatePreprocess.git",
+      "commit": "1a35b81a418bbba093356ad19b19bf2a76a24f4e",
+      "path": "custom_nodes/ComfyUI-WanAnimatePreprocess",
+      "requirements_sha256": "71b3e3604d5e68d69afd6d34789471e3ebf57329a521b07d1d4aa17f5eef3e6f"
+    },
+    {
+      "name": "pose",
+      "url": "https://github.com/kijai/ComfyUI-SCAIL-Pose.git",
+      "commit": "11402b150d728440a4a89964faa58907f84c35e6",
+      "path": "custom_nodes/ComfyUI-SCAIL-Pose",
+      "requirements_sha256": "fd63069f1ce4a7e027245cc91f7d37f46c11fec1ab2932f05eb48d609298d8bb"
+    }
+  ]
+}

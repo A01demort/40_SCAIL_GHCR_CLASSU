@@ -1,0 +1,2 @@
+# Preserve the frontend version explicitly selected by the original Dockerfile.
+comfyui-frontend-package==1.37.2

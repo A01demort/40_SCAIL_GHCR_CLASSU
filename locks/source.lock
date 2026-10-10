@@ -1,0 +1,62 @@
+antlr4-python3-runtime==4.9.3 \
+    --hash=sha256:f224469b4168294902bb1efa80a8bf7855f24c99aef99cbefc1bcd3cce77881b
+    # via
+    #   hydra-core
+    #   omegaconf
+basicsr==1.4.2 \
+    --hash=sha256:b89b595a87ef964cda9913b4d99380ddb6554c965577c0c10cb7b78e31301e87
+    # via
+    #   -r requirements/pins.txt
+    #   gfpgan
+    #   realesrgan
+cstr @ https://github.com/WASasquatch/cstr/archive/0520c29a18a7a869a6e5983861d6f7a4c86f8e9b.zip#sha256=3c48ae7e568ac6fdcbc5e2fcd340a0882797cd781536628ceb2a9d6609b2ea5c
+    # via -r requirements/requirements.in
+fairscale==0.4.13 \
+    --hash=sha256:1b797825c427f5dba92253fd0d8daa574e8bd651a2423497775fab1b30cfb768
+    # via -r requirements/requirements.in
+ffmpy @ https://github.com/WASasquatch/ffmpy/archive/f000737698b387ffaeab7cd871b0e9185811230d.zip#sha256=924f5184cfb5916c39a9f81ae3f16ec66a205ecba7312a704b9f31745f37ca7f
+    # via -r requirements/requirements.in
+filterpy==1.4.5 \
+    --hash=sha256:4f2a4d39e4ea601b9ab42b2db08b5918a9538c168cff1c6895ae26646f3d73b1
+    # via facexlib
+fvcore==0.1.5.post20221221 \
+    --hash=sha256:f2fb0bb90572ae651c11c78e20493ed19b2240550a7e4bbb2d6de87bdd037860
+    # via -r requirements/requirements.in
+img2texture @ https://github.com/WASasquatch/img2texture/archive/d6159abea44a0b2cf77454d3d46962c8b21eb9d3.zip#sha256=6ae0ed3a68b2c355ceb38374f646d41149d7823ce2ee937dbf4bc3c9418c8a80
+    # via -r requirements/requirements.in
+insightface==0.7.3 \
+    --hash=sha256:f191f719612ebb37018f41936814500544cd0f86e6fcd676c023f354c668ddf7
+    # via -r requirements/requirements.in
+iopath==0.1.10 \
+    --hash=sha256:3311c16a4d9137223e20f141655759933e1eda24f8bff166af834af3c645ef01
+    # via
+    #   fvcore
+    #   sam-2
+pixeloe==0.1.4 \
+    --hash=sha256:2d6b95a7a7a557e07a6f1578d6dafa884adc425cc1ab16d8cec2e6ff26594901
+    # via -r requirements/requirements.in
+pycairo==1.29.0 \
+    --hash=sha256:09b7f69a5ff6881e151354ea092137b97b0b1f0b2ab4eb81c92a02cc4a08e335 \
+    --hash=sha256:12757ebfb304b645861283c20585c9204c3430671fad925419cba04844d6dfed \
+    --hash=sha256:15b36aea699e2ff215cb6a21501223246032e572a3a10858366acdd69c81a1c8 \
+    --hash=sha256:3391532db03f9601c1cee9ebfa15b7d1db183c6020f3e75c1348cee16825934f \
+    --hash=sha256:3eb382a4141591807073274522f7aecab9e8fa2f14feafd11ac03a13a58141d7 \
+    --hash=sha256:3f01c3b5e49ef9411fff6bc7db1e765f542dc1c9cfed4542958a5afa3a8b8e76 \
+    --hash=sha256:5e45fce6185f553e79e4ef1722b8e98e6cde9900dbc48cb2637a9ccba86f627a \
+    --hash=sha256:65bddd944aee9f7d7d72821b1c87e97593856617c2820a78d589d66aa8afbd08 \
+    --hash=sha256:69e2a7968a3fbb839736257bae153f547bca787113cc8d21e9e08ca4526e0b6b \
+    --hash=sha256:91114e4b3fbf4287c2b0788f83e1f566ce031bda49cf1c3c3c19c3e986e95c38 \
+    --hash=sha256:91bcd7b5835764c616a615d9948a9afea29237b34d2ed013526807c3d79bb1d0 \
+    --hash=sha256:96c67e6caba72afd285c2372806a0175b1aa2f4537aa88fb4d9802d726effcd1 \
+    --hash=sha256:b69be8bb65c46b680771dc6a1a422b1cdd0cffb17be548f223e8cbbb6205567c \
+    --hash=sha256:b72200ea0e5f73ae4c788cd2028a750062221385eb0e6d8f1ecc714d0b4fdf82 \
+    --hash=sha256:caba0837a4b40d47c8dfb0f24cccc12c7831e3dd450837f2a356c75f21ce5a15 \
+    --hash=sha256:e91243437a21cc4c67c401eff4433eadc45745275fa3ade1a0d877e50ffb90da \
+    --hash=sha256:eafe3d2076f3533535ad4a361fa0754e0ee66b90e548a3a0f558fed00b1248f2 \
+    --hash=sha256:f3f7fde97325cae80224c09f12564ef58d0d0f655da0e3b040f5807bd5bd3142
+    # via rlpycairo
+sam-2 @ https://github.com/facebookresearch/sam2/archive/2b90b9f5ceec907a1c18123530e92e794ad901a4.zip#sha256=fe93082a71a885a427894b1eab76341768781b6b58a298a0717e03862097d137
+    # via -r requirements/requirements.in
+wget==3.2 \
+    --hash=sha256:35e630eca2aa50ce998b9b1a127bb26b30dfee573702782aa982f875e3f16061
+    # via transparent-background

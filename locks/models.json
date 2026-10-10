@@ -1,0 +1,67 @@
+{
+  "schema": 1,
+  "models": [
+    {
+      "path": "detection/yolov10m.onnx",
+      "url": "https://huggingface.co/Wan-AI/Wan2.2-Animate-14B/resolve/cb93a225fbaf1ca100f54e79da8f994995b689b3/process_checkpoint/det/yolov10m.onnx",
+      "sha256": "89b526498a6d55f869a6ab52e3a2eb20ad45b3711c1f7de3dd9ca0b399dfd6d7",
+      "size": 61659339
+    },
+    {
+      "path": "detection/vitpose-l-wholebody.onnx",
+      "url": "https://huggingface.co/JunkyByte/easy_ViTPose/resolve/e83805274e89428969355ec4afffcbc413e79188/onnx/wholebody/vitpose-l-wholebody.onnx",
+      "sha256": "89bdf6692d9224dbd5004dcef23a9ba2d54c5776212b359d5a5b5068ac14fd08",
+      "size": 1234579166
+    },
+    {
+      "path": "clip_vision/clip_vision_h.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/123acf1cc74bccbb9bfff8ac1ee72edc08c2341d/split_files/clip_vision/clip_vision_h.safetensors",
+      "sha256": "64a7ef761bfccbadbaa3da77366aac4185a6c58fa5de5f589b42a65bcc21f161",
+      "size": 1264219396
+    },
+    {
+      "path": "loras/Wan21_CausVid_14B_T2V_lora_rank32_v2.safetensors",
+      "url": "https://huggingface.co/Kijai/WanVideo_comfy/resolve/8260d429d19fd7a72304cad059160b95d843913f/Wan21_CausVid_14B_T2V_lora_rank32_v2.safetensors",
+      "sha256": "3d6853cb7e7e9d6d35fb6c7163a85dab98e6c91d1341e8a3cf0bfb4e66dd68cc",
+      "size": 204551064
+    },
+    {
+      "path": "loras/lightx2v_I2V_14B_480p_cfg_step_distill_rank32_bf16.safetensors",
+      "url": "https://huggingface.co/Kijai/WanVideo_comfy/resolve/8260d429d19fd7a72304cad059160b95d843913f/Lightx2v/lightx2v_I2V_14B_480p_cfg_step_distill_rank32_bf16.safetensors",
+      "sha256": "f501375c1a4e34533fa1c08360059f8f849ebddd829ff5853e551c3fea991368",
+      "size": 373424368
+    },
+    {
+      "path": "diffusion_models/Wan21-14B-SCAIL-preview_comfy-Q5_K_M.gguf",
+      "url": "https://huggingface.co/vantagewithai/SCAIL-Preview-GGUF/resolve/f94f521f007df8701f7f2d5e53f3fa424050b764/Wan21-14B-SCAIL-preview_comfy-Q5_K_M.gguf",
+      "sha256": "8da8179e4ce3564ff5ffa2861cec45135a0758bb9aed88f7582fe318d5e04424",
+      "size": 12744003072
+    },
+    {
+      "path": "vae/wan_2.1_vae.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/123acf1cc74bccbb9bfff8ac1ee72edc08c2341d/split_files/vae/wan_2.1_vae.safetensors",
+      "sha256": "2fc39d31359a4b0a64f55876d8ff7fa8d780956ae2cb13463b0223e15148976b",
+      "size": 253815318
+    },
+    {
+      "path": "text_encoders/umt5-xxl-enc-fp8_e4m3fn.safetensors",
+      "url": "https://huggingface.co/Kijai/WanVideo_comfy/resolve/8260d429d19fd7a72304cad059160b95d843913f/umt5-xxl-enc-fp8_e4m3fn.safetensors",
+      "sha256": "3fe5173588270c22505d4f9158bb1644b78331b8614206a97e92760b960c9ffa",
+      "size": 6731333792
+    },
+    {
+      "path": "nlf/nlf_l_multi_0.3.2.torchscript",
+      "url": "https://huggingface.co/spaces/yanboding/MTVCrafter/resolve/9d9257a85413a16e99ce252c5794ca09908dc0ba/nlf_l_multi_0.3.2.torchscript",
+      "sha256": "52bee28edb6ea9148691331df87cfc238d7e3d9134dc60104a5aaed282a9ddad",
+      "size": 493117974
+    }
+  ],
+  "optional_models": [
+    {
+      "path": "diffusion_models/Wan21-14B-SCAIL-preview_comfy-Q8_0.gguf",
+      "url": "https://huggingface.co/vantagewithai/SCAIL-Preview-GGUF/resolve/f94f521f007df8701f7f2d5e53f3fa424050b764/Wan21-14B-SCAIL-preview_comfy-Q8_0.gguf",
+      "sha256": "2e4eeb9c0ba1c1c2192d94b04e80f88f0e938a2c453e8a0728597f73438b2162",
+      "size": 18144988672
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+.research/
+.tools/
+__pycache__/
+test-results/
+*.zip
+
+# Private course material and local inputs must never enter Git.
+/workflows/
+/private/
+/attachments/
+/input/
+/output/
+*.log
+.env
+.env.*

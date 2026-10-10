@@ -1,0 +1,4 @@
+torch @ https://download-r2.pytorch.org/whl/cu124/torch-2.5.1%2Bcu124-cp310-cp310-linux_x86_64.whl#sha256=9dde30f399ca22137455cca4d47140dfb7f4176e2d16a9729fc044eebfadb13a
+torchvision @ https://download-r2.pytorch.org/whl/cu124/torchvision-0.20.1%2Bcu124-cp310-cp310-linux_x86_64.whl#sha256=3a055e4e9040b129878d57c39db55f117f975899ff30dd70c8f2621d91170dbe
+torchaudio @ https://download-r2.pytorch.org/whl/cu124/torchaudio-2.5.1%2Bcu124-cp310-cp310-linux_x86_64.whl#sha256=097593edf32f0a8450aba7822b8097d2f2476fe96c0ab99331d12c347003180b
+xformers @ https://download.pytorch.org/whl/cu124/xformers-0.0.29.post1-cp310-cp310-manylinux_2_28_x86_64.whl#sha256=ff0cd00be84cc6867762d8c76f764f36c88f5997ae45caba28ab38d08dcf7090

@@ -1,0 +1,15 @@
+.git
+.research
+.tools
+__pycache__
+**/__pycache__
+*.zip
+test-results
+workflows
+private
+attachments
+input
+output
+*.log
+.env
+.env.*
