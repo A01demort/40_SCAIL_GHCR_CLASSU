@@ -3,9 +3,6 @@ set -Eeuo pipefail
 export PYTHONPATH='' PYTHONNOUSERSITE=1
 echo "Starting SCAIL v${SCAIL_RELEASE_VERSION:?Release version missing from image}"
 mkdir -p /workspace/ComfyUI/{models,input,output,temp} /workspace/scail-user/default/workflows /workspace/scail-logs /workspace/A1
-# Keep old user data/code untouched; only models/input/output are reused.
-cp -an /opt/scail/model-defaults/. /workspace/ComfyUI/models/
-# The operator loads their private workflow through ComfyUI; no workflow is distributed here.
 # 기존 A1 스크립트 네 개를 유지합니다. 변경된 기존 파일은 번호가 붙은 백업으로 보존합니다.
 for helper in init_or_check_nodes.sh startup_banner.sh SCAIL_down_a1.sh Wan2.1_Vace_a1.sh; do
   if ! cmp -s "/opt/scail/$helper" "/workspace/A1/$helper"; then
@@ -13,9 +10,13 @@ for helper in init_or_check_nodes.sh startup_banner.sh SCAIL_down_a1.sh Wan2.1_V
   fi
   chmod +x "/workspace/A1/$helper"
 done
-python /opt/scail/scripts/runtime_policy.py
 echo 'A1(AI) : https://www.youtube.com/@A01demort'
 /workspace/A1/init_or_check_nodes.sh
+export PATH="/workspace/.scail/current/venv/bin:$PATH"
+export VIRTUAL_ENV=/workspace/.scail/current/venv
+export PIP_NO_INDEX=1 PIP_REQUIRE_HASHES=1 UV_OFFLINE=true
+export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
+python /opt/scail/scripts/runtime_policy.py
 echo '의존성 확인 완료 - 서비스 시작'
 cd /opt/ComfyUI
 comfy_pid='' jupyter_pid=''

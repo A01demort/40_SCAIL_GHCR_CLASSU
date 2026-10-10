@@ -4,7 +4,7 @@ __pycache__/
 test-results/
 *.zip
 
-# Private course material and local inputs must never enter Git.
+# Local data and credentials.
 /workflows/
 /private/
 /attachments/

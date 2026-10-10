@@ -18,10 +18,11 @@ import verify_workflow
 import integrity
 import requirements_input
 import runtime_policy
+import bootstrap
 
 
 class ReleaseTests(unittest.TestCase):
-    def test_public_node_contract_has_no_private_graph(self):
+    def test_node_contract_contains_only_registration_names(self):
         contract = json.loads((ROOT / 'requirements/node-types.json').read_text(encoding='utf-8'))
         self.assertEqual(set(contract), {'required_node_types', 'required_frontend_extensions'})
         self.assertGreater(len(contract['required_node_types']), 20)
@@ -50,9 +51,13 @@ class ReleaseTests(unittest.TestCase):
         self.assertFalse(binary & source)
         self.assertEqual(binary | source, names('locks/requirements-linux-cu124.lock'))
         self.assertEqual(names('locks/shared-modules.lock'), {'opencv-contrib-python', 'onnxruntime-gpu'})
-        docker = (ROOT / 'Dockerfile').read_text(encoding='utf-8')
-        self.assertLess(docker.index('locks/source.lock'), docker.index('locks/shared-modules.lock'))
-        self.assertIn('--no-build-isolation', docker)
+        commands = bootstrap.install_commands(ROOT, Path('runtime'), Path('runtime/venv/bin/python'))
+        installs = [command for command in commands if '--require-hashes' in command]
+        self.assertEqual(len(installs), 3)
+        self.assertEqual([Path(command[-1]).name for command in installs], ['binary.lock', 'source.lock', 'shared-modules.lock'])
+        self.assertIn('--no-build-isolation', installs[1])
+        self.assertTrue(all('--no-deps' in command for command in installs))
+        self.assertEqual(commands[-1][-3:], ['-m', 'pip', 'check'])
 
     def test_source_lock_and_upstream_requirements(self):
         manifest = json.loads((ROOT / 'locks/sources.json').read_text(encoding='utf-8'))
@@ -72,7 +77,7 @@ class ReleaseTests(unittest.TestCase):
         self.assertEqual((ROOT / 'requirements/requirements.in').read_text(encoding='utf-8'), requirements_input.render())
 
     def test_every_model_has_immutable_bytes(self):
-        for filename, count in [('models.json', 9), ('models-vace.json', 6), ('models-reactor.json', 1)]:
+        for filename, count in [('models.json', 9), ('models-vace.json', 6), ('models-reactor.json', 5)]:
             manifest = json.loads((ROOT / 'locks' / filename).read_text(encoding='utf-8'))
             self.assertEqual(len(manifest['models']), count)
             entries = manifest['models'] + manifest.get('optional_models', [])
@@ -104,7 +109,8 @@ class ReleaseTests(unittest.TestCase):
         self.assertIn('--backup=numbered', start)
         self.assertIn('"/workspace/A1/$helper"', start)
         self.assertIn('node-v18.20.8-linux-x64.tar.xz', docker)
-        self.assertIn('models-reactor.json', docker)
+        self.assertNotIn('models-reactor.json', docker)
+        self.assertIn('models-reactor.json', (ROOT / 'init_or_check_nodes.sh').read_text(encoding='utf-8'))
         self.assertIn('config/jupyter_notebook_config.py', docker)
         self.assertIn('VOLUME ["/workspace"]', docker)
         lock = (ROOT / 'locks/requirements-linux-cu124.lock').read_text(encoding='utf-8')
@@ -162,7 +168,8 @@ class ReleaseTests(unittest.TestCase):
             self.assertIn('set -Eeuo pipefail', source)
         dockerfile = (ROOT / 'Dockerfile').read_text(encoding='utf-8')
         self.assertRegex(dockerfile.splitlines()[0], r'@sha256:[a-f0-9]{64}$')
-        self.assertIn('--require-hashes', dockerfile)
+        self.assertNotRegex(dockerfile, r'pip install|models.py download|main.py|integrity.py seal')
+        self.assertNotIn('sources.py', dockerfile)
         self.assertIn('/opt/scail/scripts/smoke.sh', dockerfile)
         self.assertNotIn('--front-end-version', dockerfile)
 
@@ -175,12 +182,70 @@ class ReleaseTests(unittest.TestCase):
         self.assertTrue(verify_workflow.check(wf, {}, exts, 'Starting server'))
         self.assertTrue(verify_workflow.check(wf, info, [], 'Starting server'))
 
-    def test_private_workflow_is_not_required_for_image(self):
+    def test_image_excludes_local_data(self):
         self.assertNotIn('COPY workflows', (ROOT / 'Dockerfile').read_text(encoding='utf-8'))
         self.assertIn('/workflows/', (ROOT / '.gitignore').read_text(encoding='utf-8'))
         self.assertIn('workflows', (ROOT / '.dockerignore').read_text(encoding='utf-8').splitlines())
-        for source in (ROOT / 'scripts').glob('*.py'):
-            self.assertNotIn('SCAIL_runpod_locked.json', source.read_text(encoding='utf-8'))
+
+    def test_bootstrap_reuses_completed_environment_and_changes_on_lock_update(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            config = root / 'config'
+            (config / 'locks').mkdir(parents=True)
+            lock = config / 'locks/packages.lock'
+            lock.write_text('version-one')
+            calls = []
+            def installer(config, target, workspace):
+                calls.append(target)
+                (target / 'venv/bin').mkdir(parents=True)
+                (target / 'venv/bin/python').write_text('interpreter')
+                (target / 'installed.json').write_text('{}')
+            first = bootstrap.ensure(config, root / 'state', root, installer)
+            self.assertEqual(bootstrap.ensure(config, root / 'state', root, installer), first)
+            self.assertEqual(len(calls), 1)
+            lock.write_text('version-two')
+            second = bootstrap.ensure(config, root / 'state', root, installer)
+            self.assertNotEqual(first, second)
+            self.assertTrue(first.exists())
+            self.assertEqual(len(calls), 2)
+
+    def test_failed_bootstrap_never_marks_success_or_removes_existing_data(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            config = root / 'config'
+            (config / 'locks').mkdir(parents=True)
+            shared = root / 'ComfyUI/models/user-model.bin'
+            shared.parent.mkdir(parents=True)
+            shared.write_bytes(b'keep')
+            def installer(config, target, workspace):
+                (target / 'partial').write_text('incomplete')
+                raise RuntimeError('download failed')
+            with self.assertRaisesRegex(RuntimeError, 'download failed'):
+                bootstrap.ensure(config, root / 'state', root, installer)
+            self.assertEqual(list((root / 'state/releases').glob('*.json')), [])
+            self.assertEqual(list((root / 'state/environments').iterdir()), [])
+            self.assertEqual(shared.read_bytes(), b'keep')
+
+    def test_incomplete_saved_environment_is_not_reused(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            config = root / 'config'
+            config.mkdir()
+            def installer(config, target, workspace):
+                (target / 'venv/bin').mkdir(parents=True)
+                (target / 'venv/bin/python').write_text('interpreter')
+                (target / 'installed.json').write_text('{}')
+            installed = bootstrap.ensure(config, root / 'state', root, installer)
+            (installed / 'installed.json').unlink()
+            with self.assertRaisesRegex(RuntimeError, 'Incomplete saved environment'):
+                bootstrap.ensure(config, root / 'state', root, installer)
+
+    def test_build_smoke_check_does_not_import_gpu_packages(self):
+        source = (ROOT / 'scripts/smoke.sh').read_text(encoding='utf-8')
+        self.assertNotRegex(source, r'main.py|import torch|gpu_probe|bootstrap.py|models.py')
+        self.assertIn('ast.parse', source)
+        init = (ROOT / 'init_or_check_nodes.sh').read_text(encoding='utf-8')
+        self.assertLess(init.index('bootstrap.py'), init.index('gpu_probe.py'))
 
     def test_missing_or_failed_original_pack_blocks_ready(self):
         manifest = json.loads((ROOT / 'locks/sources.json').read_text(encoding='utf-8'))

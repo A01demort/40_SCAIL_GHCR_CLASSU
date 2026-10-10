@@ -32,7 +32,7 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build (includes real CPU import and public node registration gate)
+      - name: Build and push runtime installer image
         id: build
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8
         with:
@@ -44,12 +44,12 @@ jobs:
           tags: |
             ${{ steps.image.outputs.name }}:v${{ env.RELEASE_VERSION }}
             ${{ steps.image.outputs.name }}:sha-${{ github.sha }}
-      - name: Record candidate digest
+      - name: Record image digest
         env:
           IMAGE: ${{ steps.image.outputs.name }}
           DIGEST: ${{ steps.build.outputs.digest }}
         run: |
           echo "Release: $IMAGE:v$RELEASE_VERSION" >> "$GITHUB_STEP_SUMMARY"
-          echo "Candidate: $IMAGE@$DIGEST" >> "$GITHUB_STEP_SUMMARY"
-          echo 'CPU import gate passed. RunPod GPU and full video acceptance are still required.' >> "$GITHUB_STEP_SUMMARY"
+          echo "Image: $IMAGE@$DIGEST" >> "$GITHUB_STEP_SUMMARY"
+          echo 'Packages and nodes install on RunPod from the bundled locks. GPU checks run on Pod startup.' >> "$GITHUB_STEP_SUMMARY"
           echo 'Use the digest, never a mutable tag, in the production RunPod template.' >> "$GITHUB_STEP_SUMMARY"

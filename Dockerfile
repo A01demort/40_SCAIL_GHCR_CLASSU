@@ -15,7 +15,7 @@ RUN rm -f /etc/apt/sources.list.d/*.list && \
       ca-certificates git wget curl ffmpeg aria2 libgl1 libegl1 libglib2.0-0 libgomp1 libzbar0 \
       build-essential pkg-config libcairo2-dev libssl-dev zlib1g-dev libbz2-dev libreadline-dev \
       libsqlite3-dev libncurses5-dev libncursesw5-dev xz-utils tk-dev libffi-dev liblzma-dev \
-      software-properties-common locales sudo tzdata xterm nano gnupg && \
+      software-properties-common locales sudo tzdata xterm nano gnupg util-linux && \
     rm -rf /var/lib/apt/lists/*
 # Node.js 18 및 번들 npm 유지. 저장소 최신 버전 대신 검증한 배포 아카이브로 고정합니다.
 RUN curl --fail --location --retry 3 -o /tmp/node.tar.xz https://nodejs.org/dist/v18.20.8/node-v18.20.8-linux-x64.tar.xz && \
@@ -35,39 +35,19 @@ RUN curl --fail --location --retry 3 -o python.tgz https://www.python.org/ftp/py
 COPY locks /opt/scail/locks
 COPY requirements /opt/scail/requirements
 COPY scripts /opt/scail/scripts
-# Paid workflows are supplied privately by the operator, never baked into this image.
 COPY init_or_check_nodes.sh startup_banner.sh SCAIL_down_a1.sh Wan2.1_Vace_a1.sh /opt/scail/
 # 기존 Jupyter 설정 파일 유지
 COPY config/jupyter_notebook_config.py /root/.jupyter/jupyter_notebook_config.py
+# Only static checks run during the image build. GPU setup runs on RunPod.
 RUN python /opt/scail/scripts/requirements_input.py && \
-    python /opt/scail/scripts/sources.py /opt/scail/locks/sources.json /opt/ComfyUI && \
-    python -m pip install --no-cache-dir --no-deps --require-hashes --only-binary=:all: \
-      --index-url https://pypi.org/simple -r /opt/scail/locks/binary.lock && \
-    SAM2_BUILD_CUDA=0 python -m pip install --no-cache-dir --no-deps --require-hashes \
-      --no-binary=:all: --no-build-isolation --use-pep517 \
-      --index-url https://pypi.org/simple -r /opt/scail/locks/source.lock && \
-    python -m pip install --no-cache-dir --no-deps --force-reinstall --require-hashes --only-binary=:all: \
-      --index-url https://pypi.org/simple -r /opt/scail/locks/shared-modules.lock && \
-    python -m pip check
-# Shared cv2/onnxruntime namespaces are finalized with contrib/GPU bytes above.
-# SAM2 uses its upstream-supported portable build; optional CUDA postprocessing is not compiled.
-# Application + interpreter live outside the RunPod volume. Old volume code is never imported.
-RUN mv /opt/ComfyUI/models /opt/scail/model-defaults && \
-    python /opt/scail/scripts/models.py download --lock /opt/scail/locks/models-reactor.json --root /opt/scail/model-defaults && \
-    mkdir -p /workspace/ComfyUI/models && \
-    cp -a /opt/scail/model-defaults/. /workspace/ComfyUI/models/ && \
-    ln -s /workspace/ComfyUI/models /opt/ComfyUI/models && \
-    chmod +x /opt/scail/*.sh /opt/scail/scripts/*.sh
-ENV PIP_NO_INDEX=1 PIP_REQUIRE_HASHES=1 UV_OFFLINE=true \
-    HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
-    WAS_BLOCK_AUTO_INSTALL=true YOLO_AUTOINSTALL=false \
+    chmod +x /opt/scail/*.sh /opt/scail/scripts/*.sh && \
+    /opt/scail/scripts/smoke.sh
+ENV WAS_BLOCK_AUTO_INSTALL=true YOLO_AUTOINSTALL=false NO_ALBUMENTATIONS_UPDATE=1 \
     HF_HOME=/workspace/.cache/huggingface
-# Build MUST fail on missing public node classes or IMPORT FAILED.
-RUN /opt/scail/scripts/smoke.sh && python /opt/scail/scripts/integrity.py seal
-WORKDIR /opt/ComfyUI
+WORKDIR /workspace
 # 기존 /workspace 볼륨 선언 유지
 VOLUME ["/workspace"]
 EXPOSE 8188 8888
-HEALTHCHECK --interval=60s --timeout=30s --start-period=300s --retries=2 \
+HEALTHCHECK --interval=60s --timeout=30s --start-period=3600s --retries=3 \
   CMD python /opt/scail/scripts/verify_workflow.py --log /workspace/scail-logs/comfyui.log --timeout 10 || exit 1
 ENTRYPOINT ["/opt/scail/scripts/start.sh"]

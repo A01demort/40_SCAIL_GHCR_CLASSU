@@ -1,8 +1,21 @@
 #!/usr/bin/env bash
-# Deliberately no pip/git/network writes on Pod startup.
+# Install once on the volume, then verify and reuse the locked environment.
 set -Eeuo pipefail
+mkdir -p /workspace/.scail /workspace/scail-logs
+(
+  flock -x 9
+  /usr/local/bin/python /opt/scail/scripts/bootstrap.py
+) 9>/workspace/.scail/install.lock
+export PATH="/workspace/.scail/current/venv/bin:$PATH"
+export VIRTUAL_ENV=/workspace/.scail/current/venv
+if [[ -e /opt/ComfyUI && ! -L /opt/ComfyUI ]]; then
+  echo 'Unexpected /opt/ComfyUI directory; use the current image.' >&2
+  exit 1
+fi
+ln -sfn /workspace/.scail/current/ComfyUI /opt/ComfyUI
 python /opt/scail/scripts/integrity.py check
 python /opt/scail/scripts/gpu_probe.py
+python /opt/scail/scripts/models.py download --lock /opt/scail/locks/models-reactor.json
 
 # 🎓 AI 교육 & 커뮤니티 안내 (기존 안내 유지)
 echo -e "\n====🎓 AI 교육 & 커뮤니티 안내====\n"

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Run before the first real generation, passing the private input media paths.
+# Check the runtime and input media before generation.
 set -Eeuo pipefail
+export PATH="/workspace/.scail/current/venv/bin:$PATH"
 if [[ $# -ne 2 ]]; then
   echo 'Usage: accept.sh /path/to/reference-image /path/to/motion-video' >&2
   exit 2

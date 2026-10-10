@@ -1,4 +1,4 @@
-"""Fetch only the source commits in the reviewed manifest (image build only)."""
+"""Fetch source commits and verify their requirements before runtime installation."""
 import hashlib
 import json
 from pathlib import Path

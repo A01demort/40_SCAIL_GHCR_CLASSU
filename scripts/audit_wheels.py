@@ -113,7 +113,7 @@ def main():
     report = {'target': 'CPython 3.10 Linux x86_64 glibc 2.31',
               'requirements_sha256': hashlib.sha256(text.encode()).hexdigest(), 'artifacts': results}
     (output / 'wheel-audit.json').write_text(json.dumps(report, indent=2) + '\n')
-    print(f"PASS: {len(outputs['binary'])} compatible wheels and {len(outputs['source'])} pinned source builds. Native source compilation must pass the Docker build.")
+    print(f"PASS: {len(outputs['binary'])} compatible wheels and {len(outputs['source'])} pinned source builds. Native sources compile during RunPod setup.")
 
 
 if __name__ == '__main__':

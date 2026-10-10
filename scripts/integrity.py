@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 import re
 import subprocess
+import sys
 
 
 def sha(path):
@@ -55,15 +56,16 @@ def main():
     p.add_argument('mode', choices=['seal', 'check'])
     p.add_argument('--root', type=Path, default=Path('/opt/ComfyUI'))
     p.add_argument('--config', type=Path, default=Path('/opt/scail'))
+    p.add_argument('--seal', type=Path, default=Path('/workspace/.scail/current/installed.json'))
     a = p.parse_args()
     manifest = json.loads((a.config / 'locks/sources.json').read_text())
     current = {'packages': inventory(), 'sources': source_files(a.root, manifest)}
-    seal = a.config / 'locks/installed.json'
+    seal = a.seal
     if a.mode == 'seal':
         seal.write_text(json.dumps(current, indent=2) + '\n')
     elif current != json.loads(seal.read_text()):
         raise SystemExit('Runtime drift detected. Redeploy the approved image digest; do not pip install in this Pod.')
-    subprocess.run(['python', '-m', 'pip', 'check'], check=True)
+    subprocess.run([sys.executable, '-m', 'pip', 'check'], check=True)
 
 
 if __name__ == '__main__':

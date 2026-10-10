@@ -1,4 +1,4 @@
-"""Verify operator-supplied media without reading or distributing a workflow."""
+"""Verify image and video inputs."""
 import argparse
 from pathlib import Path
 import subprocess

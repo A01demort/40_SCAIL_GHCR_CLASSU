@@ -1,4 +1,4 @@
-"""Check public node registration without distributing private workflow graphs."""
+"""Check node registration and server startup errors."""
 import argparse
 import json
 from pathlib import Path
@@ -57,7 +57,7 @@ def main():
                      json.loads(args.sources.read_text(encoding='utf-8')))
     if failures:
         raise SystemExit('\n'.join(failures))
-    print('Public node registration and startup log checks passed. This is not a private workflow or GPU generation test.')
+    print('Node registration and startup log checks passed.')
 
 
 if __name__ == '__main__':

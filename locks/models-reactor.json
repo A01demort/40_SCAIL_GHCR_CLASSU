@@ -6,6 +6,30 @@
       "url": "https://huggingface.co/datasets/Gourieff/ReActor/resolve/788477a1c8088e664f10a74b95ce65dcdd3c56dc/models/inswapper_128.onnx",
       "sha256": "e4a3f08c753cb72d04e10aa0f7dbe3deebbf39567d4ead6dce08e98aa49e16af",
       "size": 554253681
+    },
+    {
+      "path": "facerestore_models/GFPGANv1.3.pth",
+      "url": "https://huggingface.co/datasets/Gourieff/ReActor/resolve/788477a1c8088e664f10a74b95ce65dcdd3c56dc/models/facerestore_models/GFPGANv1.3.pth",
+      "sha256": "c953a88f2727c85c3d9ae72e2bd4846bbaf59fe6972ad94130e23e7017524a70",
+      "size": 348632874
+    },
+    {
+      "path": "facerestore_models/GFPGANv1.4.pth",
+      "url": "https://huggingface.co/datasets/Gourieff/ReActor/resolve/788477a1c8088e664f10a74b95ce65dcdd3c56dc/models/facerestore_models/GFPGANv1.4.pth",
+      "sha256": "e2cd4703ab14f4d01fd1383a8a8b266f9a5833dacee8e6a79d3bf21a1b6be5ad",
+      "size": 348632874
+    },
+    {
+      "path": "facerestore_models/codeformer-v0.1.0.pth",
+      "url": "https://huggingface.co/datasets/Gourieff/ReActor/resolve/788477a1c8088e664f10a74b95ce65dcdd3c56dc/models/facerestore_models/codeformer-v0.1.0.pth",
+      "sha256": "1009e537e0c2a07d4cabce6355f53cb66767cd4b4297ec7a4a64ca4b8a5684b7",
+      "size": 376637898
+    },
+    {
+      "path": "facerestore_models/GPEN-BFR-512.onnx",
+      "url": "https://huggingface.co/datasets/Gourieff/ReActor/resolve/788477a1c8088e664f10a74b95ce65dcdd3c56dc/models/facerestore_models/GPEN-BFR-512.onnx",
+      "sha256": "bf80acb8e91ba8852e3f012505be2c3b6cd6b3eed5ec605e3db87863c4e74d4e",
+      "size": 284244491
     }
   ]
 }
