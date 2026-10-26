@@ -84,10 +84,18 @@ RUN chmod +x /workspace/A1/Wan2.1_Vace_a1.sh
 COPY SCAIL_down_a1.sh /opt/scail-workspace/A1/SCAIL_down_a1.sh
 RUN chmod +x /workspace/A1/SCAIL_down_a1.sh
 
-COPY runtime/bootstrap.py runtime/workspace.py runtime/entrypoint.sh runtime/start.sh /opt/scail-runtime-fix/
+COPY runtime/bootstrap.py runtime/workspace.py runtime/entrypoint.sh runtime/start.sh runtime/gpu_runtime.py /opt/scail-runtime-fix/
 RUN --mount=type=cache,target=/workspace/.cache/pip \
     chmod +x /opt/scail-runtime-fix/entrypoint.sh && \
     python -B /opt/scail-runtime-fix/bootstrap.py --build /workspace/A1/init_or_check_nodes.sh
+
+RUN python -B /opt/scail-runtime-fix/gpu_runtime.py && \
+    python -m venv --system-site-packages /opt/scail-cu128/venv && \
+    PIP_CONSTRAINT=/opt/scail-cu128/runtime/constraints.txt \
+    UV_CONSTRAINT=/opt/scail-cu128/runtime/constraints.txt \
+    /opt/scail-cu128/venv/bin/python -m pip install --no-cache-dir \
+        -r /opt/scail-cu128/runtime/gpu-packages.txt --index-url https://download.pytorch.org/whl/cu128 && \
+    /opt/scail-cu128/venv/bin/python -B /opt/scail-cu128/runtime/bootstrap.py --verify --build
 
 # RunPod Secure Cloud mounts an empty volume over /workspace. Keep the complete
 # built workspace outside that mount and restore missing files at container boot.

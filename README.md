@@ -1,7 +1,7 @@
-# SCAIL 1.0.26
+# SCAIL 1.0.27
 
-RunPod Secure Cloud에서도 사용할 수 있도록 시작 방식을 개선했습니다.
+RunPod Secure / Community Cloud 시작 방식을 유지하고, RTX 50 시리즈용 고정 CUDA 환경을 추가했습니다.
 
 ```text
-ghcr.io/a01demort/40_scail_comfyui_classu:v1.0.26
+ghcr.io/a01demort/40_scail_comfyui_classu:v1.0.27
 ```

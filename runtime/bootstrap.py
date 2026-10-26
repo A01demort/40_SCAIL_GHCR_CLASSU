@@ -28,6 +28,10 @@ def required_versions():
     return [tuple(line.split('==', 1)) for line in (ROOT / 'required.txt').read_text().splitlines() if line]
 
 
+def torch_index():
+    return 'https://download.pytorch.org/whl/' + dict(required_versions())['torch'].split('+', 1)[1]
+
+
 def mismatches():
     result = []
     for name, expected in required_versions():
@@ -103,8 +107,9 @@ def verify_runtime():
     if pending:
         torch_names = {'torch', 'torchvision', 'torchaudio'}
         if any(name in torch_names for name, _, _ in pending):
-            run([sys.executable, '-m', 'pip', 'install', 'torch==2.5.1+cu124', 'torchvision==0.20.1+cu124', 'torchaudio==2.5.1+cu124', '--index-url', 'https://download.pytorch.org/whl/cu124'])
-        run([sys.executable, '-m', 'pip', 'install', '-r', str(ROOT / 'required.txt'), '--extra-index-url', 'https://download.pytorch.org/whl/cu124'])
+            versions = dict(required_versions())
+            run([sys.executable, '-m', 'pip', 'install', *[name + '==' + versions[name] for name in ('torch', 'torchvision', 'torchaudio')], '--index-url', torch_index()])
+        run([sys.executable, '-m', 'pip', 'install', '-r', str(ROOT / 'required.txt'), '--extra-index-url', torch_index()])
     verify_nodes()
     if not ctypes.util.find_library('zbar'):
         run(['apt-get', 'update', '-qq'])
@@ -130,14 +135,14 @@ from pyzbar.pyzbar import decode
 from transformers import BlipProcessor,BlipForConditionalGeneration,BlipForQuestionAnswering,pipeline,AutoModelForSeq2SeqLM,AutoTokenizer,AutoModel,AutoProcessor,StoppingCriteria,StoppingCriteriaList,AutoModelForCausalLM
 from diffusers import FlowMatchEulerDiscreteScheduler
 from sam2.build_sam import build_sam2
-assert torch.__version__ == "2.5.1+cu124"
 assert numpy.__version__ == "1.26.4"
 assert cv2.__version__ == "4.11.0"
 assert "CUDAExecutionProvider" in onnxruntime.get_available_providers()
 '''
+    imports += 'assert torch.__version__ == ' + repr(dict(required_versions())['torch']) + '\n'
     if not BUILD:
         imports += 'assert (torch.ones(1,device="cuda")+1).item() == 2\n'
-    imports += 'print("SCAIL dependency check passed: Torch 2.5.1+cu124 / NumPy 1.26.4 / ONNX GPU 1.20.0")\n'
+    imports += 'print("SCAIL dependency check passed: Torch " + torch.__version__ + " / NumPy 1.26.4 / ONNX GPU 1.20.0")\n'
     run([sys.executable, '-B', '-c', imports])
 
 
@@ -150,6 +155,11 @@ def prepare_init(before, build=False):
     if len(invalid) != 1:
         raise RuntimeError('Expected v1.0.23 facelib command')
     after = after.replace(invalid[0], b'\n', 1)
+    versions = dict(required_versions())
+    after = after.replace(b'torch==2.5.1 torchvision==0.20.1 torchaudio==2.5.1',
+        ' '.join(name + '==' + versions[name] for name in ('torch', 'torchvision', 'torchaudio')).encode())
+    after = after.replace(b'xformers==0.0.29.post1', ('xformers==' + versions['xformers']).encode())
+    after = after.replace(b'https://download.pytorch.org/whl/cu124', torch_index().encode())
     clone_lines = [line for line in after.splitlines(True) if line.startswith(b'git clone https://github.com/')]
     if len(clone_lines) != 20:
         raise RuntimeError('Expected 20 original custom node repositories')
@@ -163,7 +173,7 @@ def prepare_init(before, build=False):
     gate = b'if [ ! -f "/tmp/.a1_sys_pkg_checked" ]; then'
     if after.count(gate) != 1:
         raise RuntimeError('Expected original package marker')
-    command = ('/usr/bin/python -B ' + shlex.quote(str(ROOT / 'bootstrap.py'))).encode()
+    command = (shlex.quote(sys.executable) + ' -B ' + shlex.quote(str(ROOT / 'bootstrap.py'))).encode()
     after = after.replace(gate, gate[:-6] + b' && ! ' + command + b' --packages-ready; then', 1)
     wan_gate = b'if [ -d "ComfyUI-WanVideoWrapper" ] && [ ! -f "/tmp/.wan_wrapper_checked" ]; then'
     if after.count(wan_gate) != 1:
@@ -210,7 +220,7 @@ def main():
         with tempfile.TemporaryDirectory(prefix='scail-impact-') as folder:
             temporary = Path(folder) / 'requirements.txt'
             temporary.write_bytes(prepared)
-            run([sys.executable, '-m', 'pip', 'install', '-r', str(temporary), '--extra-index-url', 'https://download.pytorch.org/whl/cu124'])
+            run([sys.executable, '-m', 'pip', 'install', '-r', str(temporary), '--extra-index-url', torch_index()])
         assert original.read_bytes() == before, 'Original node requirements changed'
         return 0
     if args.verify:
