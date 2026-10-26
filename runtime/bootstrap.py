@@ -99,9 +99,10 @@ def ensure_frontend():
 
 
 def verify_runtime():
-    if mismatches():
+    pending = mismatches()
+    if pending:
         torch_names = {'torch', 'torchvision', 'torchaudio'}
-        if any(name in torch_names for name, _, _ in mismatches()):
+        if any(name in torch_names for name, _, _ in pending):
             run([sys.executable, '-m', 'pip', 'install', 'torch==2.5.1+cu124', 'torchvision==0.20.1+cu124', 'torchaudio==2.5.1+cu124', '--index-url', 'https://download.pytorch.org/whl/cu124'])
         run([sys.executable, '-m', 'pip', 'install', '-r', str(ROOT / 'required.txt'), '--extra-index-url', 'https://download.pytorch.org/whl/cu124'])
     verify_nodes()
@@ -120,7 +121,8 @@ def verify_runtime():
         run([sys.executable, '-m', 'pip', 'install', '--force-reinstall', '--no-deps', 'onnxruntime-gpu==1.20.0'])
     ensure_frontend()
     run([sys.executable, '-m', 'pip', 'check'])
-    assert not mismatches(), mismatches()
+    pending = mismatches()
+    assert not pending, pending
     imports = '''import torch,torchvision,torchaudio,numpy,cv2,onnx,onnxruntime,insightface,basicsr,facexlib,gfpgan,realesrgan
 import peft,accelerate,alembic,sqlalchemy,comfyui_workflow_templates,comfyui_embedded_docs
 import skimage,scipy,numba,timm,av,torchsde,pymatting,albumentations,aiofiles,ypy_websocket,huggingface_hub,tokenizers,nio,kornia,spandrel,xformers,sageattention
@@ -153,13 +155,22 @@ def prepare_init(before, build=False):
         raise RuntimeError('Expected 20 original custom node repositories')
     for line in clone_lines:
         repo = re.search(rb'git clone https://github.com/[^/]+/([^ ]+)\.git', line).group(1)
-        replacement = b'if [ ! -d "' + repo + b'/.git" ]; then\n' + line + b'fi\n'
+        # Fetch only the blobs used by the original pinned checkout.
+        # The source script and every original checkout revision remain intact.
+        efficient_clone = line.replace(b'git clone https://', b'git clone --filter=blob:none --no-checkout https://', 1)
+        replacement = b'if [ ! -d "' + repo + b'/.git" ]; then\n' + efficient_clone + b'fi\n'
         after = after.replace(line, replacement, 1)
     gate = b'if [ ! -f "/tmp/.a1_sys_pkg_checked" ]; then'
     if after.count(gate) != 1:
         raise RuntimeError('Expected original package marker')
     command = ('/usr/bin/python -B ' + shlex.quote(str(ROOT / 'bootstrap.py'))).encode()
     after = after.replace(gate, gate[:-6] + b' && ! ' + command + b' --packages-ready; then', 1)
+    wan_gate = b'if [ -d "ComfyUI-WanVideoWrapper" ] && [ ! -f "/tmp/.wan_wrapper_checked" ]; then'
+    if after.count(wan_gate) != 1:
+        raise RuntimeError('Expected original WanVideoWrapper package marker')
+    after = after.replace(wan_gate,
+        b'if [ -d "ComfyUI-WanVideoWrapper" ] && [ ! -f "/tmp/.wan_wrapper_checked" ]'
+        b' && { [ ! -f "ComfyUI-WanVideoWrapper/.installed" ] || ! ' + command + b' --packages-ready; }; then', 1)
     install = b'    if pip install -r "$req_file"; then'
     if after.count(install) != 1:
         raise RuntimeError('Expected original node requirements installation')

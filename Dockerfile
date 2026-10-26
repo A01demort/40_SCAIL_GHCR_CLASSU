@@ -1,10 +1,10 @@
+# syntax=docker/dockerfile:1
 FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu20.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PIP_CACHE_DIR=/workspace/.cache/pip
 ENV PIP_CONSTRAINT=/opt/scail-runtime-fix/constraints.txt
 ENV UV_CONSTRAINT=/opt/scail-runtime-fix/constraints.txt
-COPY runtime /opt/scail-runtime-fix
 
 # 시스템 패키지 및 빌드 도구 설치
 RUN apt-get update && apt-get install -y \
@@ -33,10 +33,9 @@ RUN wget https://www.python.org/ftp/python/3.10.6/Python-3.10.6.tgz && \
 WORKDIR /workspace
 RUN mkdir -p /workspace && chmod -R 777 /workspace && \
     chown -R root:root /workspace && \
-    git clone https://github.com/comfyanonymous/ComfyUI.git /workspace/ComfyUI && \
-    cd /workspace/ComfyUI && \
-    git fetch --tags && \
-    git checkout v0.7.0
+    mkdir -p /opt/scail-workspace && \
+    git clone --depth 1 --branch v0.7.0 https://github.com/comfyanonymous/ComfyUI.git /opt/scail-workspace/ComfyUI && \
+    ln -s /opt/scail-workspace/ComfyUI /workspace/ComfyUI
 
 WORKDIR /workspace/ComfyUI
 
@@ -51,6 +50,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # JupyterLab 고정 버전 설치
+COPY runtime/constraints.txt runtime/required.txt /opt/scail-runtime-fix/
 RUN pip install --no-cache-dir jupyterlab==3.6.6 jupyter-server==1.23.6
 
 # ReActor ONNX 모델 사전 다운로드
@@ -64,29 +64,36 @@ RUN mkdir -p /root/.jupyter && cat > /root/.jupyter/jupyter_notebook_config.py <
 c.NotebookApp.allow_origin = '*'
 c.NotebookApp.ip = '0.0.0.0'
 c.NotebookApp.open_browser = False
-c.NotebookApp.token = ''
-c.NotebookApp.password = ''
 c.NotebookApp.terminado_settings = {'shell_command': ['/bin/bash']}
 PYCONF
 
 # A1 폴더 생성 + 초기화/배너 스크립트 복사
-RUN mkdir -p /workspace/A1
-COPY init_or_check_nodes.sh /workspace/A1/init_or_check_nodes.sh
+RUN mkdir -p /opt/scail-workspace/A1 && \
+    ln -s /opt/scail-workspace/A1 /workspace/A1
+COPY init_or_check_nodes.sh /opt/scail-workspace/A1/init_or_check_nodes.sh
 COPY init_or_check_nodes.sh /opt/scail-runtime-fix/init_or_check_nodes.sh
-COPY startup_banner.sh /workspace/A1/startup_banner.sh
+COPY startup_banner.sh /opt/scail-workspace/A1/startup_banner.sh
 RUN chmod +x /workspace/A1/init_or_check_nodes.sh && \
     chmod +x /workspace/A1/startup_banner.sh
 
 # Wan2.1_Vace_a1.sh 스크립트 복사 및 실행 권한
-COPY Wan2.1_Vace_a1.sh /workspace/A1/Wan2.1_Vace_a1.sh
+COPY Wan2.1_Vace_a1.sh /opt/scail-workspace/A1/Wan2.1_Vace_a1.sh
 RUN chmod +x /workspace/A1/Wan2.1_Vace_a1.sh
 
 # SCAIL_down_a1.sh 스크립트 복사 및 실행 권한
-COPY SCAIL_down_a1.sh /workspace/A1/SCAIL_down_a1.sh
+COPY SCAIL_down_a1.sh /opt/scail-workspace/A1/SCAIL_down_a1.sh
 RUN chmod +x /workspace/A1/SCAIL_down_a1.sh
 
-RUN chmod +x /opt/scail-runtime-fix/entrypoint.sh && \
+COPY runtime/bootstrap.py runtime/workspace.py runtime/entrypoint.sh runtime/start.sh /opt/scail-runtime-fix/
+RUN --mount=type=cache,target=/workspace/.cache/pip \
+    chmod +x /opt/scail-runtime-fix/entrypoint.sh && \
     python -B /opt/scail-runtime-fix/bootstrap.py --build /workspace/A1/init_or_check_nodes.sh
+
+# RunPod Secure Cloud mounts an empty volume over /workspace. Keep the complete
+# built workspace outside that mount and restore missing files at container boot.
+WORKDIR /workspace
+RUN unlink /workspace/A1 && unlink /workspace/ComfyUI
+WORKDIR /workspace/ComfyUI
 
 ENTRYPOINT ["/opt/scail-runtime-fix/entrypoint.sh"]
 
@@ -98,4 +105,4 @@ EXPOSE 8188
 EXPOSE 8888
 
 # JSON CMD 형식(시그널 처리 안정화)
-CMD ["bash", "-lc", "echo 'A1(AI) : https://www.youtube.com/@A01demort' && python -B /opt/scail-runtime-fix/bootstrap.py /workspace/A1/init_or_check_nodes.sh && echo '의존성 확인 완료 - 서비스 시작' && (jupyter lab --ip=0.0.0.0 --port=8888 --allow-root --ServerApp.root_dir=/workspace --ServerApp.token='' --ServerApp.password='' & python -u /workspace/ComfyUI/main.py --listen 0.0.0.0 --port=8188 --front-end-version Comfy-Org/ComfyUI_frontend@1.37.2 & /workspace/A1/startup_banner.sh & wait)"]
+CMD ["bash", "-lc", "exec bash /opt/scail-runtime-fix/start.sh"]
